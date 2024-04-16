@@ -2,7 +2,7 @@
 情報分析論演習前半のグループ8のgithubリポジトリ
 
 # Overview
-京都市内の
+京都市内の自転車地図とカレンダー
 
 # Frameworkや言語
 ## Frontend
