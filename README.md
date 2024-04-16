@@ -1,6 +1,9 @@
 # PoIS-group8
 情報分析論演習前半のグループ8のgithubリポジトリ
 
+# Frameworkや言語
+Laravel+React.js+Google api+Line api
+
 # Backend
 1. Extract data from google map to database (mysql?)
    * bicycle parking location
