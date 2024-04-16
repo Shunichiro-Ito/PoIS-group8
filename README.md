@@ -8,4 +8,5 @@
 2. Function
    * record user input to database
    * transform view setting to sql language and make query to database
+   * calculate transport time/ export walking time from google (Bicycling:Walking=1:4)
    
