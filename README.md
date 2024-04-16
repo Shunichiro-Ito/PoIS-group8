@@ -12,6 +12,7 @@ Laravel(PHP)+Google api+Line api
 
 # Backend
 ## Laravel
+WindowsにPHPを導入してVSCodeで開発を始めるまでの手順: https://qiita.com/ariaki/items/efbbf77849e0778c75fc
 https://youtube.com/playlist?list=PLCyDm9NTxdhLnA4tH5ToQR1K1LcWIAdOa&si=97SZXtBUbEiH9Fcw
 1. Construct framework: https://laravel.com/docs/11.x/installation#creating-a-laravel-project
 2. Extract data from google map to database (mysql?)
