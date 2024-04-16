@@ -2,30 +2,7 @@
 情報分析論演習前半のグループ8のgithubリポジトリ
 
 # Overview
-京都市内の自転車地図とカレンダー
+失敗談推薦システム
 
-# Frameworkや言語
-## Frontend
-React.js+CSS+HTML
-## Backend
-Laravel(PHP)+Google api+Line api
-
-# Backend
-## Laravel
-WindowsにPHPを導入してVSCodeで開発を始めるまでの手順: https://qiita.com/ariaki/items/efbbf77849e0778c75fc
-https://youtube.com/playlist?list=PLCyDm9NTxdhLnA4tH5ToQR1K1LcWIAdOa&si=97SZXtBUbEiH9Fcw
-1. Construct framework: https://laravel.com/docs/11.x/installation#creating-a-laravel-project
-2. Extract data from google map to database (mysql?)
-   * bicycle parking location 
-   * route
-3. Function
-   * record user input to database
-   * transform view setting to sql language and make query to database
-   * calculate transport time/ export walking time from google (Bicycling:Walking=1:4)
-  
-## Line API
-  * Webhook: https://qiita.com/soarflat/items/ed970f6dc59b2ab76169
-
-
-## 可能機能についての参考リンク
-  *　Google Calendar APIで日本の祝日を取得 - https://zenn.dev/taizo_pro/articles/3f1f7aef9e37ac
+# Proposal Document
+https://docs.google.com/document/d/1aauqhihtXH1ppXuZ_r9jzRijeaalkcAl3kTQf8D4UII/edit?usp=sharing
