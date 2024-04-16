@@ -11,6 +11,7 @@ React.js+CSS+HTML
 Laravel(PHP)+Google api+Line api
 
 # Backend
+## Laravel
 https://youtube.com/playlist?list=PLCyDm9NTxdhLnA4tH5ToQR1K1LcWIAdOa&si=97SZXtBUbEiH9Fcw
 1. Construct framework: https://laravel.com/docs/11.x/installation#creating-a-laravel-project
 2. Extract data from google map to database (mysql?)
@@ -20,6 +21,10 @@ https://youtube.com/playlist?list=PLCyDm9NTxdhLnA4tH5ToQR1K1LcWIAdOa&si=97SZXtBU
    * record user input to database
    * transform view setting to sql language and make query to database
    * calculate transport time/ export walking time from google (Bicycling:Walking=1:4)
-   * 
+  
+## Line API
+  * Webhook: https://qiita.com/soarflat/items/ed970f6dc59b2ab76169
+
+
 ## 可能機能についての参考リンク
   *　Google Calendar APIで日本の祝日を取得 - https://zenn.dev/taizo_pro/articles/3f1f7aef9e37ac
