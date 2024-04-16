@@ -21,4 +21,5 @@ https://youtube.com/playlist?list=PLCyDm9NTxdhLnA4tH5ToQR1K1LcWIAdOa&si=97SZXtBU
    * transform view setting to sql language and make query to database
    * calculate transport time/ export walking time from google (Bicycling:Walking=1:4)
    * 
-   
+## 可能機能についての参考リンク
+  *　Google Calendar APIで日本の祝日を取得 - https://zenn.dev/taizo_pro/articles/3f1f7aef9e37ac
