@@ -150,7 +150,10 @@ def extractDataToTxt(filename='boardmap.csv',row_limit=1000,post_limit=9999,arti
                     postfile.write(post['title'])
                     postfile.write(f"Article No: {post['article_no']}")
                     for article in articles:
-                        postfile.write(f"{article['username']}\n{article['content']}")
+                        try:
+                            postfile.write(f"{article['username']}\n{article['content']}")
+                        except UnicodeEncodeError as e:
+                            pass
 
         del(rows[0])
         with open(filename,'w') as bdmap:
