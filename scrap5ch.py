@@ -23,6 +23,9 @@ def make_request_with_retry(url, max_retries=3, timeout=5):
         retries += 1  # Wait for a short duration before retrying
     
     print(f"Failed to get response from {url} after {max_retries} retries.")
+    with open('failUrl.csv') as fail:
+        writer=csv.writer(fail)
+        writer.writerow(f"{url}")
     return None
 
 def extractLinks(soup):
