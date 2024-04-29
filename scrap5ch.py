@@ -91,17 +91,23 @@ def extractDataToTxt(filename='boardmap.csv',row_limit=1000,post_limit=9999,arti
             Posts=extractPosts(postsUrl,post_limit,screenOut)
             directory=f'5ch/{"-".join(row[:-1])}/'
 
+            print(f'5ch/{"-".join(row[:-1])}/\n')
+
             if not os.path.isdir(directory):
                 os.mkdir(directory)
 
             for post in Posts:
+
+                print(f'{post['title']} {post['link']}\n')
                 articles=extractArticle('/'.join([postsUrl,post['link']]),
                             article_limit)
-                with open(f"{directory}{post['link']}.txt",'w') as postfile:
-                    postfile.write(post['title'])
-                    postfile.write(f"Article No: {post['article_no']}")
-                    for article in articles:
-                        postfile.write(f"{article['username']}\n{article['content']}")
+                postfilename=f"{directory}{post['link']}.txt"
+                if not os.path.isfile(postfilename):
+                    with open(postfilename,'w') as postfile:
+                        postfile.write(post['title'])
+                        postfile.write(f"Article No: {post['article_no']}")
+                        for article in articles:
+                            postfile.write(f"{article['username']}\n{article['content']}")
 
             row_limit-=1
             if row_limit==0:
