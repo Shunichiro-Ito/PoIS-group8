@@ -79,16 +79,17 @@ def extractPosts(url,post_limit,screen):
             title,article_no=None,0
             
         if screen<int(article_no):
-            postUrl=post.get('href')
-            if postUrl.endswith('/l50'):
-                postUrl=postUrl[:-4]
+            post_no=post.get('href')
+            if post_no.endswith('/l50'):
+                post_no=post_no[:-4]
 
             if base:
-                postUrl='/'.join([base,postUrl])
+                postUrl='/'.join([base,post_no])
 
             yield {'link':postUrl,
                 'title':title,
-                'article_no':article_no
+                'article_no':article_no,
+                'post_no':post_no
                 }
     
 def extractArticle(postUrl,article_limit):
@@ -130,7 +131,7 @@ def extractDataToTxt(filename='boardmap.csv',row_limit=1000,post_limit=9999,arti
             print(f"{post['title']} {post['link']}\n")
             articles=extractArticle(post['link'],
                         article_limit)
-            postfilename=f"{directory}{post['link']}.txt"
+            postfilename=f"{directory}{post['post_no']}.txt"
             if not os.path.isfile(postfilename):
                 with open(postfilename,'w') as postfile:
                     postfile.write(post['title'])
