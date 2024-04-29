@@ -23,7 +23,7 @@ def make_request_with_retry(url, max_retries=3, timeout=5):
         retries += 1  # Wait for a short duration before retrying
     
     print(f"Failed to get response from {url} after {max_retries} retries.")
-    with open('failUrl.csv') as fail:
+    with open('failUrl.csv','w') as fail:
         writer=csv.writer(fail)
         writer.writerow(f"{url}")
     return None
@@ -104,23 +104,27 @@ def extractPosts(url,post_limit,screen):
 def extractArticle(postUrl,article_limit):
 
     res = make_request_with_retry(postUrl)
-    soup = BeautifulSoup(res.text, 'html.parser')
-    
-    articles=soup.find_all('article')
-    article_limit=min(article_limit,len(articles))
-    for i in range(article_limit):
-        article=articles[i]
-    
-        username=article.find('span','postusername')
-        if username:
-            username=username.get_text()
+    if res:
+        soup = BeautifulSoup(res.text, 'html.parser')
         
-        content=article.find('section','post-content')
-        if content:
-            content=content.get_text()
+        articles=soup.find_all('article')
+        article_limit=min(article_limit,len(articles))
+        for i in range(article_limit):
+            article=articles[i]
         
-        yield {'username':username,
-            'content':content}
+            username=article.find('span','postusername')
+            if username:
+                username=username.get_text()
+            
+            content=article.find('section','post-content')
+            if content:
+                content=content.get_text()
+            
+            yield {'username':username,
+                'content':content}
+    else:
+        yield {'username':'',
+            'content':''}
         
 def extractDataToTxt(filename='boardmap.csv',row_limit=1000,post_limit=9999,article_limit=9999,screenOut=10):
     with open(filename,'r') as bdmap:
