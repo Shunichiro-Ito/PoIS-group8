@@ -10,7 +10,7 @@ def make_request_with_retry(url, max_retries=3, timeout=5):
     retries = 0
     while retries < max_retries:
         try:
-            interval=random.uniform(0,6)
+            interval=random.uniform(0,3)
             time.sleep(interval)
             response = requests.get(url, timeout=timeout)
             if response.status_code == 200:
@@ -68,8 +68,9 @@ def extractPosts(url,post_limit,screen):
     if base:
         base=base.get('href')[1:-1]
         
-        base='/'.join([url.split('.net')[0],
+        base=''.join([url.split('.net')[0],
                        '.net',
+                       '/',
                        base])
 
     post_limit=min(post_limit,len(posts))
