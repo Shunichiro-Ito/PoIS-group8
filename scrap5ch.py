@@ -98,7 +98,7 @@ def extractDataToTxt(filename='boardmap.csv',row_limit=1000,post_limit=9999,arti
 
             for post in Posts:
 
-                print(f'{post['title']} {post['link']}\n')
+                print(f"{post['title']} {post['link']}\n")
                 articles=extractArticle('/'.join([postsUrl,post['link']]),
                             article_limit)
                 postfilename=f"{directory}{post['link']}.txt"
