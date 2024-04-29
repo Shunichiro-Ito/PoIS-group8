@@ -129,6 +129,7 @@ def extractDataToTxt(filename='boardmap.csv',row_limit=1000,post_limit=9999,arti
     with open(filename,'r') as bdmap:
         reader=csv.DictReader(bdmap)
         rows=list(reader)
+        print(rows)
 
     for r in range(len(rows)):
         row=rows[0]
