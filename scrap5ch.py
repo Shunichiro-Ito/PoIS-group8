@@ -61,10 +61,13 @@ def extractPosts(url,post_limit,screen):
         posts=posts.find_all('a')
     else:
         posts=[]
+
     base=soup.find('base')
     if base:
         base=base.get('href')[1:-1]
-        base='/'.join(['/'.join(url.split('/')[:-1]),
+        
+        base='/'.join([url.split('.net')[0],
+                       '.net',
                        base])
 
     post_limit=min(post_limit,len(posts))
