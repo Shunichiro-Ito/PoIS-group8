@@ -21,7 +21,7 @@ def make_request_with_retry(url, max_retries=3, timeout=5):
         time.sleep(2)  # Wait for a short duration before retrying
     
     print(f"Failed to get response from {url} after {max_retries} retries.")
-    return response
+    return None
 
 def extractLinks(soup):
     for element in soup.body.find_all('a'):
@@ -51,9 +51,12 @@ def createBoardmap(filename='boardmap.csv',base_url='https://www2.5ch.net/5ch.ht
 def extractPosts(url,post_limit,screen):
     url=url+'subback.html'
     res = make_request_with_retry(url)
-    soup = BeautifulSoup(res.text, 'html.parser')
-    
-    posts=soup.find(id='trad')
+    if res:
+        soup = BeautifulSoup(res.text, 'html.parser')
+        posts=soup.find(id='trad')
+    else:
+        posts=[]
+
     if posts:
         posts=posts.find_all('a')
     else:
