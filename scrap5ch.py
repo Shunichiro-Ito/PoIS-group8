@@ -77,10 +77,14 @@ def extractPosts(url,post_limit,screen):
             postUrl=post.get('href')
             if postUrl.endswith('/l50'):
                 postUrl=postUrl[:-4]
+            base=soup.find('base')
+            if base:
+                base=base.get('href')[1:-1]
 
             yield {'link':postUrl,
                 'title':title,
-                'article_no':article_no}
+                'article_no':article_no,
+                'base':base}
     
 def extractArticle(postUrl,article_limit):
 
@@ -119,7 +123,7 @@ def extractDataToTxt(filename='boardmap.csv',row_limit=1000,post_limit=9999,arti
 
         for post in Posts:
             print(f"{post['title']} {post['link']}\n")
-            articles=extractArticle('/'.join([postsUrl,post['link']]),
+            articles=extractArticle('/'.join([postsUrl,post['base'],post['link']]),
                         article_limit)
             postfilename=f"{directory}{post['link']}.txt"
             if not os.path.isfile(postfilename):
