@@ -49,8 +49,8 @@ def createBoardmap(filename='boardmap.csv',base_url='https://www2.5ch.net/5ch.ht
             writer.writerow(i)
 
 def extractPosts(url,post_limit,screen):
-    url=url+'subback.html'
-    res = make_request_with_retry(url)
+    Subbackurl=url+'subback.html'
+    res = make_request_with_retry(Subbackurl)
     if res:
         soup = BeautifulSoup(res.text, 'html.parser')
         posts=soup.find(id='trad')
@@ -61,6 +61,9 @@ def extractPosts(url,post_limit,screen):
         posts=posts.find_all('a')
     else:
         posts=[]
+    base=soup.find('base')
+    if base:
+        base=base.get('href')[1:-1]
 
     post_limit=min(post_limit,len(posts))
     for i in range(post_limit):
@@ -77,15 +80,14 @@ def extractPosts(url,post_limit,screen):
             postUrl=post.get('href')
             if postUrl.endswith('/l50'):
                 postUrl=postUrl[:-4]
-            base=soup.find('base')
+
             if base:
-                base=base.get('href')[1:-1]
-                postUrl='/'.join(postUrl.split('/')[:-1])
+                postUrl='/'.join([url.split('/')[:-1],base,postUrl])
 
             yield {'link':postUrl,
                 'title':title,
-                'article_no':article_no,
-                'base':base}
+                'article_no':article_no
+                }
     
 def extractArticle(postUrl,article_limit):
 
@@ -124,7 +126,7 @@ def extractDataToTxt(filename='boardmap.csv',row_limit=1000,post_limit=9999,arti
 
         for post in Posts:
             print(f"{post['title']} {post['link']}\n")
-            articles=extractArticle('/'.join([postsUrl,post['base'],post['link']]),
+            articles=extractArticle(post['link'],
                         article_limit)
             postfilename=f"{directory}{post['link']}.txt"
             if not os.path.isfile(postfilename):
