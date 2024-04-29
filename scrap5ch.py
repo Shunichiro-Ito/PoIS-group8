@@ -11,7 +11,7 @@ def make_request_with_retry(url, max_retries=3, timeout=5):
         try:
             response = requests.get(url, timeout=timeout)
             if response.status_code == 200:
-                return response.json()
+                return response
         except requests.Timeout:
             print(f"Request timed out. Retrying ({retries + 1}/{max_retries})...")
         except requests.RequestException as e:
