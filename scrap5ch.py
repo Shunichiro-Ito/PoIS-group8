@@ -62,11 +62,10 @@ def extractPosts(url,post_limit,screen):
         base=soup.find('base')
     else:
         posts=[]
+        base=None
 
     if posts:
         posts=posts.find_all('a')
-    else:
-        posts=[]
 
     if base:
         base=base.get('href')[1:-1]
