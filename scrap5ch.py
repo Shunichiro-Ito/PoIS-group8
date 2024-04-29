@@ -3,6 +3,25 @@ from bs4 import BeautifulSoup
 import csv
 import re
 import os
+import time
+
+def make_request_with_retry(url, max_retries=3, timeout=5):
+    retries = 0
+    while retries < max_retries:
+        try:
+            response = requests.get(url, timeout=timeout)
+            if response.status_code == 200:
+                return response.json()
+        except requests.Timeout:
+            print(f"Request timed out. Retrying ({retries + 1}/{max_retries})...")
+        except requests.RequestException as e:
+            print(f"Request failed: {e}")
+        
+        retries += 1
+        time.sleep(2)  # Wait for a short duration before retrying
+    
+    print(f"Failed to get response from {url} after {max_retries} retries.")
+    return response
 
 def extractLinks(soup):
     for element in soup.body.find_all('a'):
@@ -13,7 +32,7 @@ def extractLinks(soup):
             yield {'category':category.get_text(),'name':name,'link':link}
 
 def createBoardmap(filename='boardmap.csv',base_url='https://www2.5ch.net/5ch.html'):
-    res = requests.get(base_url)
+    res = make_request_with_retry(base_url)
     soup = BeautifulSoup(res.text, 'html.parser')
 
     with open(filename, 'w', newline='') as csvfile:
@@ -31,7 +50,7 @@ def createBoardmap(filename='boardmap.csv',base_url='https://www2.5ch.net/5ch.ht
 
 def extractPosts(url,post_limit,screen):
     url=url+'subback.html'
-    res = requests.get(url)
+    res = make_request_with_retry(url)
     soup = BeautifulSoup(res.text, 'html.parser')
     
     posts=soup.find(id='trad')
@@ -62,7 +81,7 @@ def extractPosts(url,post_limit,screen):
     
 def extractArticle(postUrl,article_limit):
 
-    res = requests.get(postUrl)
+    res = make_request_with_retry(postUrl)
     soup = BeautifulSoup(res.text, 'html.parser')
     
     articles=soup.find_all('article')
