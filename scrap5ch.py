@@ -84,8 +84,7 @@ def extractPosts(url,post_limit,screen):
                 postUrl=postUrl[:-4]
 
             if base:
-
-                postUrl='/'.join([url.split('/')[:-1],base,postUrl])
+                postUrl='/'.join([base,postUrl])
 
             yield {'link':postUrl,
                 'title':title,
