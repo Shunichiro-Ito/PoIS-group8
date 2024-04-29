@@ -83,32 +83,40 @@ def extractArticle(postUrl,article_limit):
         
 def extractDataToTxt(filename='boardmap.csv',row_limit=1000,post_limit=9999,article_limit=9999,screenOut=10):
     with open(filename,'r') as bdmap:
-        reader=csv.reader(bdmap)
-        reader.__next__()
-        
-        for row in reader:
-            postsUrl=row[2]
-            Posts=extractPosts(postsUrl,post_limit,screenOut)
-            directory=f'5ch/{"-".join(row[:-1])}/'
+        reader=csv.DictReader(bdmap)
+        rows=list(reader)
 
-            print(f'5ch/{"-".join(row[:-1])}/\n')
+    for r in range(len(rows)):
+        row=rows[0]
+        postsUrl=row['link']
+        Posts=extractPosts(postsUrl,post_limit,screenOut)
+        directory=f'5ch/{"-".join([row['category'],row['name']])}/'
 
-            if not os.path.isdir(directory):
-                os.mkdir(directory)
+        if not os.path.isdir(directory):
+            os.mkdir(directory)
 
-            for post in Posts:
+        for post in Posts:
+            print(f"{post['title']} {post['link']}\n")
+            articles=extractArticle('/'.join([postsUrl,post['link']]),
+                        article_limit)
+            postfilename=f"{directory}{post['link']}.txt"
+            if not os.path.isfile(postfilename):
+                with open(postfilename,'w') as postfile:
+                    postfile.write(post['title'])
+                    postfile.write(f"Article No: {post['article_no']}")
+                    for article in articles:
+                        postfile.write(f"{article['username']}\n{article['content']}")
 
-                print(f"{post['title']} {post['link']}\n")
-                articles=extractArticle('/'.join([postsUrl,post['link']]),
-                            article_limit)
-                postfilename=f"{directory}{post['link']}.txt"
-                if not os.path.isfile(postfilename):
-                    with open(postfilename,'w') as postfile:
-                        postfile.write(post['title'])
-                        postfile.write(f"Article No: {post['article_no']}")
-                        for article in articles:
-                            postfile.write(f"{article['username']}\n{article['content']}")
+        del(rows[0])
+        with open(filename,'w') as bdmap:
+            fieldnames =['category',
+                        'name',
+                        'link'
+                        ]
+            writer = csv.DictWriter(bdmap, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
 
-            row_limit-=1
-            if row_limit==0:
-                break
+        row_limit-=1
+        if row_limit==0:
+            break
