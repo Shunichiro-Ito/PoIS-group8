@@ -4,11 +4,14 @@ import csv
 import re
 import os
 import time
+import random
 
 def make_request_with_retry(url, max_retries=3, timeout=5):
     retries = 0
     while retries < max_retries:
         try:
+            interval=random.uniform(0,6)
+            time.sleep(interval)
             response = requests.get(url, timeout=timeout)
             if response.status_code == 200:
                 return response
@@ -17,8 +20,7 @@ def make_request_with_retry(url, max_retries=3, timeout=5):
         except requests.RequestException as e:
             print(f"Request failed: {e}")
         
-        retries += 1
-        time.sleep(2)  # Wait for a short duration before retrying
+        retries += 1  # Wait for a short duration before retrying
     
     print(f"Failed to get response from {url} after {max_retries} retries.")
     return None
