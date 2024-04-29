@@ -109,7 +109,7 @@ def extractDataToTxt(filename='boardmap.csv',row_limit=1000,post_limit=9999,arti
         row=rows[0]
         postsUrl=row['link']
         Posts=extractPosts(postsUrl,post_limit,screenOut)
-        directory=f'5ch/{"-".join([row['category'],row['name']])}/'
+        directory=f'5ch/{"-".join([row["category"],row["name"]])}/'
 
         if not os.path.isdir(directory):
             os.mkdir(directory)
