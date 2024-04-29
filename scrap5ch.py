@@ -59,6 +59,7 @@ def extractPosts(url,post_limit,screen):
     if res:
         soup = BeautifulSoup(res.text, 'html.parser')
         posts=soup.find(id='trad')
+        base=soup.find('base')
     else:
         posts=[]
 
@@ -67,7 +68,6 @@ def extractPosts(url,post_limit,screen):
     else:
         posts=[]
 
-    base=soup.find('base')
     if base:
         base=base.get('href')[1:-1]
         
