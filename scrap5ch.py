@@ -80,6 +80,7 @@ def extractPosts(url,post_limit,screen):
             base=soup.find('base')
             if base:
                 base=base.get('href')[1:-1]
+                postUrl='/'.join(postUrl.split('/')[:-1])
 
             yield {'link':postUrl,
                 'title':title,
