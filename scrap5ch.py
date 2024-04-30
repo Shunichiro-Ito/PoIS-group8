@@ -10,7 +10,7 @@ def make_request_with_retry(url, max_retries=3, timeout=5):
     retries = 0
     while retries < max_retries:
         try:
-            interval=random.uniform(0,3)
+            interval=random.uniform(0,1)
             time.sleep(interval)
             response = requests.get(url, timeout=timeout)
             if response.status_code == 200:
