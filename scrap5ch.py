@@ -25,7 +25,7 @@ def make_request_with_retry(url, max_retries=3, timeout=5):
     print(f"Failed to get response from {url} after {max_retries} retries.")
     with open('failUrl.csv','w') as fail:
         writer=csv.writer(fail)
-        writer.writerow(f"{url}")
+        writer.writerow(url)
     return None
 
 def extractLinks(soup):
@@ -40,7 +40,7 @@ def createBoardmap(filename='boardmap.csv',base_url='https://www2.5ch.net/5ch.ht
     res = make_request_with_retry(base_url)
     soup = BeautifulSoup(res.text, 'html.parser')
 
-    with open(filename, 'w', newline='') as csvfile:
+    with open(filename, 'w', newline='',encoding='utf-8') as csvfile:
         fieldnames =['category',
                     'name',
                     'link'
@@ -52,6 +52,28 @@ def createBoardmap(filename='boardmap.csv',base_url='https://www2.5ch.net/5ch.ht
         # iterate over links
         for i in extractLinks(soup):
             writer.writerow(i)
+
+def updateBoardmap(rows,bdmapfilename):
+    del(rows[0])
+    with open(bdmapfilename,'w',encoding='utf-8') as bdmap:
+        fieldnames =['category',
+                    'name',
+                    'link'
+                    ]
+        writer = csv.DictWriter(bdmap, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+def updateTagFile(filename,newRow):
+    with open(filename,'r',encoding='utf-8') as tagfile:
+        reader = csv.reader(tagfile)
+        rows=list(reader)
+
+    rows.append(newRow)
+
+    with open(filename,'w',encoding='utf-8') as tagfile:
+        writer = csv.writer(tagfile)
+        writer.writerows(rows)
 
 def extractPosts(url,post_limit,screen):
     Subbackurl=url+'subback.html'
@@ -94,8 +116,8 @@ def extractPosts(url,post_limit,screen):
             if base:
                 postUrl='/'.join([base,post_no])
 
-            yield {'link':postUrl,
-                'title':title,
+            yield {'post_link':postUrl,
+                'post_title':title,
                 'article_no':article_no,
                 'post_no':post_no
                 }
@@ -126,44 +148,62 @@ def extractArticle(postUrl,article_limit):
             'content':''}
         
 def extractDataToTxt(filename='boardmap.csv',row_limit=1000,post_limit=9999,article_limit=9999,screenOut=10):
-    with open(filename,'r') as bdmap:
+
+    with open(filename,'r',encoding='utf-8') as bdmap:
         reader=csv.DictReader(bdmap)
         rows=list(reader)
-        print(rows)
+
+    print(rows)
 
     for r in range(len(rows)):
+        
         row=rows[0]
         postsUrl=row['link']
         Posts=extractPosts(postsUrl,post_limit,screenOut)
-        directory=f'5ch/{"-".join([row["category"],row["name"]])}/'
+        tagFile=f'5ch/{"-".join([row["category"],row["name"]])}.csv'
 
-        if not os.path.isdir(directory):
-            os.mkdir(directory)
+        categoryInfo={'category':row["category"],
+                      'tag':row["name"],
+                      'category link':postsUrl}
+
+        print(f"{r}: {categoryInfo}\n")
+
+        if not os.path.isfile(tagFile):
+            with open(tagFile, 'w', newline='',encoding='utf-8') as tagcsvfile:
+                postFieldnames =['category',
+                            'tag',
+                            'category link',
+                            'post_link',
+                            'post_title',
+                            'article_no',
+                            'post_no',
+                            'content'
+                            ]
+                writer = csv.DictWriter(tagcsvfile, fieldnames=postFieldnames)
+
+                writer.writeheader()
 
         for post in Posts:
-            print(f"{post['title']} {post['link']}\n")
-            articles=extractArticle(post['link'],
+            tagFileRow=categoryInfo.copy()
+            articles=extractArticle(post['post_link'],
                         article_limit)
-            postfilename=f"{directory}{post['post_no']}.txt"
-            if not os.path.isfile(postfilename):
-                with open(postfilename,'w') as postfile:
-                    postfile.write(post['title'])
-                    postfile.write(f"Article No: {post['article_no']}")
-                    for article in articles:
-                        try:
-                            postfile.write(f"{article['username']}\n{article['content']}")
-                        except UnicodeEncodeError as e:
-                            pass
+            
+            tagFileRow.update(post)
+            content={}
+            counter=0
+            
+            for article in articles:
+                counter+=1
+                content.update({
+                    counter: article
+                })
 
-        del(rows[0])
-        with open(filename,'w') as bdmap:
-            fieldnames =['category',
-                        'name',
-                        'link'
-                        ]
-            writer = csv.DictWriter(bdmap, fieldnames=fieldnames)
-            writer.writeheader()
-            writer.writerows(rows)
+            tagFileRow.update({'content':str(content)})
+            updateTagFile(tagFile,tagFileRow)
+        
+            print(tagFileRow)
+
+        updateBoardmap(rows,filename)
 
         row_limit-=1
         if row_limit==0:
