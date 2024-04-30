@@ -200,8 +200,6 @@ def extractDataToTxt(filename='boardmap.csv',row_limit=1000,post_limit=9999,arti
 
             tagFileRow.update({'content':str(content)})
             updateTagFile(tagFile,tagFileRow)
-        
-            print(tagFileRow)
 
         updateBoardmap(rows,filename)
 
