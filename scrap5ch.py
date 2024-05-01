@@ -66,13 +66,23 @@ def updateBoardmap(rows,bdmapfilename):
 
 def updateTagFile(filename,newRow):
     with open(filename,'r',encoding='utf-8') as tagfile:
-        reader = csv.reader(tagfile)
+        reader = csv.DictReader(tagfile)
         rows=list(reader)
 
     rows.append(newRow)
 
     with open(filename,'w',encoding='utf-8') as tagfile:
-        writer = csv.writer(tagfile)
+        writer = csv.DictWriter(tagfile)
+        fieldnames =['category',
+                     'tag',
+                     'category link',
+                     'post_link',
+                     'post_title',
+                     'article_no',
+                     'post_no',
+                     'content'
+                     ]
+        writer.writeheader()
         writer.writerows(rows)
 
 def extractPosts(url,post_limit,screen):
