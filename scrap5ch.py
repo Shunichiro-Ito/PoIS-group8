@@ -72,7 +72,6 @@ def updateTagFile(filename,newRow):
     rows.append(newRow)
 
     with open(filename,'w',encoding='utf-8') as tagfile:
-        writer = csv.DictWriter(tagfile)
         fieldnames =['category',
                      'tag',
                      'category link',
@@ -82,6 +81,7 @@ def updateTagFile(filename,newRow):
                      'post_no',
                      'content'
                      ]
+        writer = csv.DictWriter(tagfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
 
