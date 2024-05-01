@@ -5,6 +5,8 @@ import re
 import os
 import time
 import random
+import sys
+csv.field_size_limit(sys.maxsize)
 
 def make_request_with_retry(url, max_retries=3, timeout=5):
     retries = 0
