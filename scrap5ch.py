@@ -199,14 +199,11 @@ def extractDataToTxt(filename='boardmap.csv',row_limit=1000,post_limit=9999,arti
                         article_limit)
             
             tagFileRow.update(post)
-            content={}
-            counter=0
+            content=[]
             
             for article in articles:
                 counter+=1
-                content.update({
-                    counter: article
-                })
+                content.append(article)
 
             tagFileRow.update({'content':str(content)})
             updateTagFile(tagFile,tagFileRow)
