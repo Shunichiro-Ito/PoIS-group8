@@ -6,6 +6,8 @@ import os
 import time
 import random
 import sys
+from tqdm import tqdm
+
 csv.field_size_limit(sys.maxsize)
 
 def make_request_with_retry(url, max_retries=3, timeout=5):
@@ -110,7 +112,7 @@ def extractPosts(url,post_limit,screen):
                        base])
 
     post_limit=min(post_limit,len(posts))
-    for i in range(post_limit):
+    for i in tqdm(range(post_limit)):
         post=posts[i]
 
         compiler=re.compile(r'\d+: (.*) \((\d+)\)')
@@ -142,7 +144,7 @@ def extractArticle(postUrl,article_limit):
         
         articles=soup.find_all('article')
         article_limit=min(article_limit,len(articles))
-        for i in range(article_limit):
+        for i in tqdm(range(article_limit)):
             article=articles[i]
         
             username=article.find('span','postusername')
@@ -167,7 +169,7 @@ def extractDataToTxt(filename='boardmap.csv',row_limit=1000,post_limit=9999,arti
 
     print(rows)
 
-    for r in range(len(rows)):
+    for r in tqdm(range(len(rows))):
         
         row=rows[0]
         postsUrl=row['link']
@@ -201,11 +203,14 @@ def extractDataToTxt(filename='boardmap.csv',row_limit=1000,post_limit=9999,arti
                         article_limit)
             
             tagFileRow.update(post)
-            content=[]
+            content={}
+            counter=0
             
             for article in articles:
                 counter+=1
-                content.append(article)
+                content.update({
+                    counter: article
+                })
 
             tagFileRow.update({'content':str(content)})
             updateTagFile(tagFile,tagFileRow)
