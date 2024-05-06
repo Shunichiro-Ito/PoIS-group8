@@ -20,16 +20,38 @@ class User(BaseModel):
     email: Optional[EmailStr] = None
     full_name: Optional[str] = None
 
-class UserIn(User):
-    password:str
-
-class UserInDB(User):
-    hashed_password: str
+class UserInpi(BaseModel):
     birth: date
     gender: Gender
     occupation: str
     mbti: str
+
+class UserIntag(BaseModel):
     interested_tag: list
+
+class UserInpw(BaseModel):
+    password:str
+
+class UserIn(User,UserInpi,UserInpw):
+    pass
+
+class UserResetPW(BaseModel):
+    new_password: str
+
+class UserInDBpw(User):
+    hashed_password: str
+
+class UserInDBchar(User):
+    birth: date
+    gender: Gender
+    occupation: str
+    mbti: str
+
+class UserInDBtag(User):
+    interested_tag: list
+
+class UserInDB(UserInDBchar,UserInDBpw,):
+    pass
 
 class UserOut(User):
     pass

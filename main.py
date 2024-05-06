@@ -1,39 +1,16 @@
-from datetime import datetime, time, timedelta, date
-from enum import Enum
-from typing import Literal, Union, Optional, Annotated
-from uuid import UUID
-
 from fastapi.responses import RedirectResponse
-from routers import users
+from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi import (
-    Body,
     Depends,
     FastAPI,
-    Query,
-    Path,
-    Cookie,
-    Header,
-    status,
-    Form,
-    File,
-    UploadFile,
-    HTTPException,
-    Request,
 )
-from fastapi.encoders import jsonable_encoder
-from fastapi.exceptions import RequestValidationError
-from fastapi.exception_handlers import (
-    http_exception_handler,
-    request_validation_exception_handler
-)
-from fastapi.responses import JSONResponse, PlainTextResponse
-from pydantic import BaseModel, Field, HttpUrl, EmailStr
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.responses import HTMLResponse
+
+from typing import Annotated
+from models.users import User
+from dependencies import get_current_user
 
 from routers import posts, users
-
 
 app=FastAPI(
     title="失敗なし",
@@ -43,23 +20,25 @@ app=FastAPI(
     version="0.0.1"
 )
 
+origins=[
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(users.router)
 app.include_router(posts.router)
 
 @app.get("/",tags=["home"])
-async def root(request:Request):
-    sessionkey=request.cookies.get('sessionKey')
-    if sessionkey:
-        return {"displayed_name":User['displayed_name'],
-                "posts":range(10)}
+async def root(current_user: Annotated[User, Depends(get_current_user)]):
+    if current_user:
+        return {"message":"timeline of posts","detail":current_user}
     else:
-        RedirectResponse("/token")
-
-@app.get("/users/me")
-async def get_me(current_user: User = Depends(get_current_user)):
-    return current_user
-
-
-@app.get("/items/")
-async def read_items(token: str = Depends(oauth2_scheme)):
-    return {"token": token}
+        print("redirect")
+        return RedirectResponse("/users/login")

@@ -1,18 +1,37 @@
 from datetime import timedelta
-from typing import Annotated
+from typing import Annotated,Optional
 
-from fastapi import Depends, APIRouter, HTTPException, status, Cookie, HTTPException, Response
+from fastapi import Depends, APIRouter, HTTPException, status, HTTPException, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 
 from fakedb import fake_users_db
 
-from models.users import Token,User,UserOut,UserInDB
-from dependencies import authenticate_user,create_access_token,get_current_user,ACCESS_TOKEN_EXPIRE_MINUTES
+from models.users import Token,User,UserIn,UserResetPW,UserInpw,UserOut,UserInpi,UserIntag
+from dependencies import (authenticate_user,
+                          create_access_token,
+                          get_current_user,
+                          ACCESS_TOKEN_EXPIRE_MINUTES,
+                          create_new_user,
+                          reset_password,
+                          get_personal_info,
+                          update_personal_info,
+                          show_tags,
+                          update_tags,
+                          read_user)
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/users",
+    tags=["Users"],
+    dependencies=[]
+    )
 
-@router.post("/token", tags=["users"],response_model=UserOut)
+
+@router.get('/login')
+async def login_page():
+    return {"message":"Please log in"}
+
+@router.post("/token",response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
@@ -31,23 +50,79 @@ async def login_for_access_token(
     return Token(access_token=access_token, token_type="bearer")
 
 
-@router.get("/users/{current_user.username}/", response_model=User, tags=["users"])
+@router.get("/{current_user.username}/", response_model=User)
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_user)],
 ):
     return current_user
 
-
-@router.get("/users/{current_user.username}/posts/", tags=["users"])
-async def read_own_posts(
+@router.post("/{current_user.username}/reset_password",response_model=UserOut)
+async def reset_password_post(
     current_user: Annotated[User, Depends(get_current_user)],
+    UserDB: UserInpw,
+    UserReset: UserResetPW,
 ):
-    return [{"item_id": "Foo", "owner": current_user.username}]
+    user=reset_password(fake_users_db,current_user.username,UserDB.password,UserReset.new_password)
+    return user
 
-@router.post("/users/register",response_model=UserOut)
-async def create_user(user:UserInDB):
-    if user not in fake_users_db:
-        fake_users_db.update({user.username:user})
-        RedirectResponse('user/login')
+@router.get("/{current_user.username}/update_personal_info",response_model=UserInpi)
+async def personal_info(
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    if current_user:
+        user=get_personal_info(fake_users_db,current_user.username)
+        return user
     else:
-        return {'message':'your username is already used. '}
+        raise HTTPException(
+            status_code=status.HTTP_303_SEE_OTHER,
+            detail="Redirecting to login page",
+            headers={"Location": "/users/login"},
+            )
+
+@router.post("/{current_user.username}/update_personal_info/submit",response_model=UserInpi)
+async def submit_personal_info(
+    current_user: Annotated[User, Depends(get_current_user)],
+    UserUpdate: UserInpi,
+):
+    if current_user:
+        user=update_personal_info(fake_users_db,current_user.username,UserUpdate)
+        return user
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_303_SEE_OTHER,
+            detail="Redirecting to login page",
+            headers={"Location": "/users/login"},
+            )
+
+@router.post("/register")
+async def create_user(user:UserIn,
+                      current_user: User=Depends(get_current_user)):
+    if not current_user:
+        if user.username not in fake_users_db:
+            create_new_user(fake_users_db,user)
+            return RedirectResponse('/users/login',status_code=status.HTTP_303_SEE_OTHER)
+        else:
+            return {'message':'your username is already used.'}
+    else:
+        return RedirectResponse('/',status_code=status.HTTP_303_SEE_OTHER)
+
+@router.get("/interest_tags")
+async def get_user_tag(current_user: User=Depends(get_current_user)):
+    return show_tags(fake_users_db,current_user)
+
+@router.post("/interest_tags/submit")
+async def update_user_tag_submit(tags:UserIntag,
+                          current_user: User=Depends(get_current_user)):
+    update_tags(fake_users_db,current_user,tags)
+    return RedirectResponse('/',status_code=status.HTTP_303_SEE_OTHER)
+
+@router.get("/me")
+async def get_me(current_user: User = Depends(get_current_user)):
+    if current_user:
+        return RedirectResponse(f"/users/{current_user.username}")
+    else:
+        return RedirectResponse("/users/login")
+
+@router.get("/{username}")
+async def get_user_page(username: str):
+    return read_user(fake_users_db,username)
