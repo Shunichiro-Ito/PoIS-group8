@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date,datetime
 
 fake_users_db = {
     "johndoe": dict(
@@ -32,19 +32,35 @@ fake_posts_db={
         post_id=1,
         content="Failed!!!",
         age=20,
-        post_date=date(2024,5,4),
+        post_date=datetime(2024,5,4,0,0,0),
         tag_id=["職場"],
         anonymous=True,
         good=10,
         impossible=2,
         early=0
-    )
+    ),
+    2:dict(
+        post_id=2,
+        content="Failed!!!",
+        age=20,
+        post_date=datetime(2024,5,4,0,0,0),
+        tag_id=["職場"],
+        anonymous=False,
+        good=10,
+        impossible=2,
+        early=0
+    ),
 }
 
 fake_post_user_db={
     1:dict(
         post_id=1,
-        user_id="johndoe",
+        username="johndoe",
+        feature_vector=[0,1,0.9,0.2,0.5]
+    ),
+    2:dict(
+        post_id=2,
+        username="alice",
         feature_vector=[0,1,0.9,0.2,0.5]
     )
 }

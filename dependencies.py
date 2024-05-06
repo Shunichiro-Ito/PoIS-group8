@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone,date
 from typing import Annotated, Union
 
 from fakedb import fake_users_db
@@ -9,7 +9,8 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from models.users import UserInDB,TokenData,UserIn,UserOut,UserInpi,UserInDBchar,UserInDBtag
+from models.users import UserInDB,TokenData,UserIn,UserOut,UserInpi,UserInDBtag
+from models.posts import PostIn,PostInDB,PostOut,PostOut2
 
 # to get a string like this run:
 # openssl rand -hex 32
@@ -59,12 +60,6 @@ def authenticate_user(db, username: str, password: str):
         return False
     return user
 
-def verify_token(token: str = Header(None), session_token: str = Cookie(None)):
-    if token or session_token:
-        return True
-    else:
-        return False
-
 def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
     to_encode = data.copy()
     if expires_delta:
@@ -112,15 +107,34 @@ def get_posts_by_user(
         post_db, 
         post_user_db,
         currentuser: UserInDB,
-        user:UserInDB,
-        max_page_size: int
+        username:str,
+        max_page_size: int,
+        page_num: int
 ):
-    if currentuser==user:
-        post_ids=[post_user_db[i] for i in post_user_db if post_user_db[i]["username"==user.username]]
-        return [post_db[j] for j in post_ids][:max_page_size]
+    start=(page_num-1)*max_page_size
+    end=start+max_page_size
+    user=get_user(fake_users_db,username)
+    if user:
+        if not currentuser:
+            post_ids=[i for i in post_user_db if post_user_db[i]["username"==username]]
+            posts=[post_db[j] for j in post_ids if post_db[j]["anonymous"]][start:end]
+        elif currentuser.username==username:
+            post_ids=[post_user_db[i] for i in post_user_db if post_user_db[i]["username"==username]][start:end]
+            posts=[post_db[j] for j in post_ids]
+        else:
+            post_ids=[post_user_db[i] for i in post_user_db if post_user_db[i]["username"==username]]
+            posts=[post_db[j] for j in post_ids if post_db[j]["anonymous"]][start:end]
+        
+        return {
+            "posts":posts,
+            "last_page": end>=len(post_ids),
+            "next_page":page_num+1
+    }
     else:
-        post_ids=[post_user_db[i] for i in post_user_db if post_user_db[i]["username"==user.username]]
-        return [post_db[j] for j in post_ids if post_db[j]["anonymous"]][:max_page_size]
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
 
 def get_personal_info(
         db,
@@ -183,3 +197,60 @@ def read_user(db,
             status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
+    
+def get_disclosed_post(db_user,
+                       dictpost,
+                       post_username):
+    post_user_InDB=UserInDB(**db_user.get(post_username))
+    dictpost.update({"username":post_username})
+    dictpost.update({"user_displayedname":post_user_InDB.displayed_name})
+    return PostOut2(**dictpost)
+
+def get_a_post(db_post,
+               db_post_user,
+               db_user,
+               user:UserInDB,
+               post_id: str):
+    dictpost=db_post.get(post_id)
+    if dictpost:
+        post=PostOut(**dictpost)
+        post_user=db_post_user.get(post_id)
+        post_username=post_user["username"]
+        if not post.anonymous:
+            return get_disclosed_post(db_user,dictpost,post_username)
+        elif user and user.username==post_username:
+            return get_disclosed_post(db_user,dictpost,post_username)
+        else:
+            return post
+
+def verify_token(token: str = Header(None), session_token: str = Cookie(None)):
+    if token or session_token:
+        return True
+    else:
+        return False
+        
+def upload_post_db(
+        user: UserInDB,
+        new_post: PostIn,
+        db,
+        db_post_user
+):
+    post_id=(len(db)+1)
+    new_post_InDB=PostInDB(
+        **vars(new_post),
+        post_id=post_id,
+        username=user.username,
+        post_date=datetime.now(),
+    )
+    db.update({
+        post_id:vars(new_post_InDB)
+    })
+
+    db_post_user.update({
+        post_id:dict(
+        post_id=post_id,
+        username=user.username,
+        feature_vector=[0,0,0,0,0,0]
+    )
+    })
+    return post_id

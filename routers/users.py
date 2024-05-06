@@ -1,11 +1,11 @@
 from datetime import timedelta
 from typing import Annotated,Optional
 
-from fastapi import Depends, APIRouter, HTTPException, status, HTTPException, Response
+from fastapi import Depends, APIRouter, HTTPException, status, Response,Header
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 
-from fakedb import fake_users_db
+from fakedb import fake_users_db,fake_post_user_db,fake_posts_db
 
 from models.users import Token,User,UserIn,UserResetPW,UserInpw,UserOut,UserInpi,UserIntag
 from dependencies import (authenticate_user,
@@ -18,7 +18,8 @@ from dependencies import (authenticate_user,
                           update_personal_info,
                           show_tags,
                           update_tags,
-                          read_user)
+                          read_user,
+                          get_posts_by_user)
 
 router = APIRouter(
     prefix="/users",
@@ -126,3 +127,18 @@ async def get_me(current_user: User = Depends(get_current_user)):
 @router.get("/{username}")
 async def get_user_page(username: str):
     return read_user(fake_users_db,username)
+
+@router.get("/{username}/posts",tags=["Posts"])
+async def read_own_posts(
+    current_user: Annotated[User, Depends(get_current_user)],
+    username: str,
+    max_page_size: int=Header(10),
+    page_num:int=Header(1),
+
+):
+    return get_posts_by_user(fake_posts_db,
+                             fake_post_user_db,
+                             current_user,
+                             username,
+                             max_page_size,
+                             page_num)
