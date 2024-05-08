@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends,HTTPException,status,Header
+from fastapi import APIRouter, Depends,HTTPException,status,Header,Form
 from fastapi.responses import RedirectResponse
 from typing import Literal, Annotated
 from dependencies import (
@@ -7,12 +7,27 @@ from dependencies import (
     get_posts_by_user,
     get_user,
     get_a_post,
-    upload_post_db
+    upload_post_db,
+    updateFeedback,
 )
 
-from fakedb import fake_posts_db,fake_post_user_db,fake_users_db
+from fastapi_pagination import LimitOffsetPage, paginate
+from fastapi_pagination.links import Page
+from fastapi_pagination.customization import (
+    CustomizedPage,
+    UseExcludedFields,
+    UseFieldsAliases,
+    UseIncludeTotal,
+    UseModelConfig,
+    UseName,
+    UseOptionalParams,
+    UseParams,
+    UseParamsFields,
+)
+
+from fakedb import fake_posts_db,fake_post_user_db,fake_users_db,fake_feedback_db
 from models.users import User
-from models.posts import PostIn
+from models.posts import PostIn, Feedback
 
 
 router = APIRouter(
@@ -51,3 +66,19 @@ async def submit_post(
 async def write_post():
     return {"message":"write post page"}
 
+@router.post("/feedback")
+async def feedback(current_user: Annotated[User,Depends(get_current_user)],
+                   post_id:int,
+                   feedback: Feedback=Form(...)
+):
+    if current_user:
+        str_feedback=feedback.value
+        return updateFeedback(current_user,post_id,str_feedback,fake_feedback_db,fake_posts_db)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You can only login to perform this action",
+            headers={"WWW-Authenticate": "Bearer"},
+            )
+    
+    

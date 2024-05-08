@@ -4,13 +4,13 @@ from typing import Annotated, Union
 from fakedb import fake_users_db
 
 from fastapi import Depends,HTTPException, status,Header,Cookie
-from fastapi.responses import RedirectResponse
+from fastapi_pagination import Page, paginate
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from models.users import UserInDB,TokenData,UserIn,UserOut,UserInpi,UserInDBtag
-from models.posts import PostIn,PostInDB,PostOut,PostOut2
+from models.users import UserInDB1,UserInDB,TokenData,UserIn,UserOut,UserInpi,UserInDBtag
+from models.posts import PostIn,PostInDB,PostOut
 
 # to get a string like this run:
 # openssl rand -hex 32
@@ -26,7 +26,6 @@ def verify_password(plain_password, hashed_password):
     print(plain_password,hashed_password)
     return pwd_context.verify(plain_password, hashed_password)
 
-
 def get_password_hash(password):
     return pwd_context.hash(password)
 
@@ -40,9 +39,10 @@ def reset_password(db, username, old_password, new_password
 ):
     user=authenticate_user(db, username,old_password)
     if user:
-        db.update({user.username:{
+        user_inDB=db.get(user.username)
+        user_inDB.update({
             "hashed_password":get_password_hash(new_password)
-        }})
+        })
 
         return UserOut(**vars(user))
     else:
@@ -99,7 +99,9 @@ def create_new_user(
 ):
     x=vars(new_user)
     x.update({"hashed_password":get_password_hash(new_user.password)})
-    new_user_DB=UserInDB(**x)
+    x.update({"user_id":len(db)+1})
+    new_user_DB=UserInDB1(**x)
+    new_user_DB=UserInDB(**vars(new_user_DB))
     db.update({new_user.username:vars(new_user_DB)})
     return 
 
@@ -107,28 +109,22 @@ def get_posts_by_user(
         post_db, 
         post_user_db,
         currentuser: UserInDB,
-        username:str,
-        max_page_size: int,
-        page_num: int
+        username:str
 ):
-    start=(page_num-1)*max_page_size
-    end=start+max_page_size
     user=get_user(fake_users_db,username)
     if user:
         if not currentuser:
-            post_ids=[i for i in post_user_db if post_user_db[i]["username"==username]]
-            posts=[post_db[j] for j in post_ids if post_db[j]["anonymous"]][start:end]
+            post_ids=[i for i in post_user_db if post_user_db[i]["user_id"==user.use_id]]
+            posts=[post_db[j] for j in post_ids if post_db[j]["anonymous"]]
         elif currentuser.username==username:
-            post_ids=[post_user_db[i] for i in post_user_db if post_user_db[i]["username"==username]][start:end]
+            post_ids=[post_user_db[i] for i in post_user_db if post_user_db[i]["user_id"==user.use_id]]
             posts=[post_db[j] for j in post_ids]
         else:
-            post_ids=[post_user_db[i] for i in post_user_db if post_user_db[i]["username"==username]]
-            posts=[post_db[j] for j in post_ids if post_db[j]["anonymous"]][start:end]
+            post_ids=[post_user_db[i] for i in post_user_db if post_user_db[i]["user_id"==user.use_id]]
+            posts=[post_db[j] for j in post_ids if post_db[j]["anonymous"]]
         
         return {
-            "posts":posts,
-            "last_page": end>=len(post_ids),
-            "next_page":page_num+1
+            "posts":posts
     }
     else:
         raise HTTPException(
@@ -191,6 +187,7 @@ def read_user(db,
               username):
     try:
         user=UserOut(**db.get(username))
+        user.dict(exclude_unset=True)
         return user
     except AttributeError:
         raise HTTPException(
@@ -198,13 +195,13 @@ def read_user(db,
             detail="User not found",
         )
     
-def get_disclosed_post(db_user,
-                       dictpost,
+def get_disclosed_post(postout:PostOut,
+                       db_user,
                        post_username):
     post_user_InDB=UserInDB(**db_user.get(post_username))
-    dictpost.update({"username":post_username})
-    dictpost.update({"user_displayedname":post_user_InDB.displayed_name})
-    return PostOut2(**dictpost)
+    postout.username=post_username
+    postout.user_displayedname=post_user_InDB.displayed_name
+    return postout
 
 def get_a_post(db_post,
                db_post_user,
@@ -214,12 +211,14 @@ def get_a_post(db_post,
     dictpost=db_post.get(post_id)
     if dictpost:
         post=PostOut(**dictpost)
+        post.dict(exclude_unset=True)
         post_user=db_post_user.get(post_id)
-        post_username=post_user["username"]
+        post_userid=post_user["user_id"]
+        post_username=[i for i in db_user if db_user[i]["user_id"]==post_userid][0]
         if not post.anonymous:
-            return get_disclosed_post(db_user,dictpost,post_username)
+            return get_disclosed_post(post,db_user,post_username)
         elif user and user.username==post_username:
-            return get_disclosed_post(db_user,dictpost,post_username)
+            return get_disclosed_post(post,db_user,post_username)
         else:
             return post
 
@@ -228,7 +227,37 @@ def verify_token(token: str = Header(None), session_token: str = Cookie(None)):
         return True
     else:
         return False
-        
+    
+def show_users(db):
+    users=[UserInDB(**db[i]) for i in db]
+    return users
+
+def certify_user(db,
+                username: str,
+                certify: bool):
+    
+    user=get_user(db,username)
+    if user:
+        user_inDB=db.get(user.username)
+        user_inDB.update({
+            "certified":certify
+        })
+        return UserOut(**vars(user))
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    
+def verify_admin(db,
+                user: UserInDB,
+):
+        user_db=[i for i in db if db[i]["username"]==user.username]
+        if user_db:
+            return True
+        else:
+            return False
+
 def upload_post_db(
         user: UserInDB,
         new_post: PostIn,
@@ -249,8 +278,40 @@ def upload_post_db(
     db_post_user.update({
         post_id:dict(
         post_id=post_id,
-        username=user.username,
-        feature_vector=[0,0,0,0,0,0]
+        user_id=user.user_id,
+        tfidf=[0,0,0,0,0,0]
     )
     })
     return post_id
+
+def updateFeedback(current_user: UserInDB,
+                   post_id: int,
+                   feedback: str,
+                   db_feedback,
+                   db_post
+):
+    feedback_ids=[k for k in db_feedback if db_feedback[k]["post_id"]==post_id 
+                  and db_feedback[k]["user_id"]==current_user.user_id]
+    if feedback_ids:
+        feedback_id=feedback_ids[0]
+        old_feedback=db_feedback[feedback_id]["feedback"]
+        if old_feedback==feedback:
+            db_feedback.pop(feedback_id)
+            db_post[post_id].update({feedback:db_post[post_id][feedback]-1})
+        else:
+            db_post[post_id].update({old_feedback:db_post[post_id][old_feedback]-1})
+            db_feedback[feedback_id].update({"feedback":feedback})
+            db_post[post_id].update({feedback:db_post[post_id][feedback]+1})
+    else:
+        db_feedback.update({
+            len(db_feedback)+1:dict(
+                post_id=post_id,
+                user_id=current_user.user_id,
+                feedback=feedback
+            )
+        })
+        original_num=db_post[post_id][feedback]
+        db_post[post_id].update({feedback:(original_num+1)})
+    post=PostOut(**db_post[post_id])
+    post.dict(exclude_unset=True)
+    return post

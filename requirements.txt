@@ -5,3 +5,6 @@ python-multipart
 python-jose[cryptography]
 passlib[bcrypt]
 pydantic[email]
+pytest
+trio
+fastapi_pagination

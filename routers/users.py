@@ -1,13 +1,16 @@
-from datetime import timedelta
+from datetime import timedelta,datetime
 from typing import Annotated,Optional
 
-from fastapi import Depends, APIRouter, HTTPException, status, Response,Header
+from fastapi import Depends, APIRouter, HTTPException, status, Response,Header,Body
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
+from fastapi_pagination import paginate
+from fastapi_pagination.links import Page
+from fastapi_pagination.cursor import CursorPage
 
-from fakedb import fake_users_db,fake_post_user_db,fake_posts_db
+from fakedb import fake_users_db,fake_post_user_db,fake_posts_db,fake_admin_db
 
-from models.users import Token,User,UserIn,UserResetPW,UserInpw,UserOut,UserInpi,UserIntag
+from models.users import Token,User,UserIn,UserResetPW,UserInpw,UserOut,UserInpi,UserIntag,UserInDB
 from dependencies import (authenticate_user,
                           create_access_token,
                           get_current_user,
@@ -19,7 +22,10 @@ from dependencies import (authenticate_user,
                           show_tags,
                           update_tags,
                           read_user,
-                          get_posts_by_user)
+                          get_posts_by_user,
+                          verify_admin,
+                          show_users,
+                          certify_user)
 
 router = APIRouter(
     prefix="/users",
@@ -29,8 +35,11 @@ router = APIRouter(
 
 
 @router.get('/login')
-async def login_page():
-    return {"message":"Please log in"}
+async def login_page(current_user: User=Depends(get_current_user)):
+    if not current_user:
+        return {"message":"login page"}
+    else:
+        return RedirectResponse("/")
 
 @router.post("/token",response_model=Token)
 async def login_for_access_token(
@@ -80,6 +89,38 @@ async def personal_info(
             headers={"Location": "/users/login"},
             )
 
+@router.get("/")
+async def users_page(current_user: User=Depends(get_current_user))->Page[UserInDB]:
+    if current_user:
+        if verify_admin(fake_admin_db,current_user):
+            return paginate(show_users(fake_users_db))
+        else:
+            raise HTTPException(status.HTTP_404_NOT_FOUND,
+                                detail="Page not found.",
+                                headers={"WWW-Authenticate": "Bearer"})
+    else:
+        raise HTTPException(status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+                            detail="Redirecting to login page",
+                            headers={"Location": "/users/login"})
+    
+@router.post("/certify")
+async def certify_submit(certifying_username: str=Body(...),
+                         certify: bool=Body(...),
+                         current_user: User=Depends(get_current_user)):
+    if verify_admin(fake_admin_db,current_user):
+        certify_user(fake_users_db,certifying_username,certify)
+        if certify:
+            return {"message":"certified"}
+        else:
+            return {"message":"uncertified"}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You are not admin",
+            headers={"Date":datetime.now(),
+                     "WWW-Authenticate": "Bearer"},
+        )
+
 @router.post("/{current_user.username}/update_personal_info/submit",response_model=UserInpi)
 async def submit_personal_info(
     current_user: Annotated[User, Depends(get_current_user)],
@@ -94,6 +135,13 @@ async def submit_personal_info(
             detail="Redirecting to login page",
             headers={"Location": "/users/login"},
             )
+
+@router.get("/register")
+async def register_page(current_user: User=Depends(get_current_user)):
+    if not current_user:
+        return {"message":"register page"}
+    else:
+        return RedirectResponse("/",status_code=status.HTTP_303_SEE_OTHER)
 
 @router.post("/register")
 async def create_user(user:UserIn,
@@ -128,17 +176,14 @@ async def get_me(current_user: User = Depends(get_current_user)):
 async def get_user_page(username: str):
     return read_user(fake_users_db,username)
 
+# not ready
+# https://uriyyo-fastapi-pagination.netlify.app/tutorials/cursor-pagination/
 @router.get("/{username}/posts",tags=["Posts"])
 async def read_own_posts(
     current_user: Annotated[User, Depends(get_current_user)],
-    username: str,
-    max_page_size: int=Header(10),
-    page_num:int=Header(1),
-
-):
-    return get_posts_by_user(fake_posts_db,
+    username: str
+)->Page[dict]:
+    return paginate(get_posts_by_user(fake_posts_db,
                              fake_post_user_db,
                              current_user,
-                             username,
-                             max_page_size,
-                             page_num)
+                             username))
