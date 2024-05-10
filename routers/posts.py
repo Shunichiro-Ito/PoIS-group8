@@ -41,7 +41,7 @@ async def read_post(post_id: int,
                     current_user: Annotated[User,Depends(get_current_user)]):
     return get_a_post(fake_posts_db,fake_post_user_db,fake_users_db,current_user,post_id)
 
-@router.get("/{key_words}")
+@router.get("/search/{key_words}")
 async def search_posts(key_words: str,
                        token: str = Depends(oauth2_scheme)):
     list_posts={}

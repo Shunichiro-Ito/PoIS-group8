@@ -1,7 +1,7 @@
 from datetime import timedelta,datetime
 from typing import Annotated,Optional
 
-from fastapi import Depends, APIRouter, HTTPException, status, Response,Header,Body
+from fastapi import Depends, APIRouter, HTTPException, status, Response,Header,Body,Security
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from fastapi_pagination import paginate
@@ -13,6 +13,7 @@ from fakedb import fake_users_db,fake_post_user_db,fake_posts_db,fake_admin_db
 from models.users import Token,User,UserIn,UserResetPW,UserInpw,UserOut,UserInpi,UserIntag,UserInDB
 from dependencies import (authenticate_user,
                           create_access_token,
+                          create_refresh_token,
                           get_current_user,
                           ACCESS_TOKEN_EXPIRE_MINUTES,
                           create_new_user,
@@ -57,8 +58,24 @@ async def login_for_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     
-    return Token(access_token=access_token, token_type="bearer")
+    refresh_token = create_refresh_token(user.username)
+    
+    return Token(access_token=access_token,refresh_token=refresh_token, token_type="bearer")
 
+@router.post("/refresh_token")
+async def refresh_token(current_user: User = Security(get_current_user, scopes=["refresh_token"])):
+    if current_user:
+            access_token = create_access_token(
+                data={"sub": current_user.username}
+            )
+            return {"access_token": access_token}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer",
+                    "Current User":current_user.username},
+        )
 
 @router.get("/{current_user.username}/", response_model=User)
 async def read_users_me(
@@ -66,7 +83,7 @@ async def read_users_me(
 ):
     return current_user
 
-@router.post("/{current_user.username}/reset_password",response_model=UserOut)
+@router.post("/reset_password",response_model=UserOut)
 async def reset_password_post(
     current_user: Annotated[User, Depends(get_current_user)],
     UserDB: UserInpw,
@@ -75,12 +92,27 @@ async def reset_password_post(
     user=reset_password(fake_users_db,current_user.username,UserDB.password,UserReset.new_password)
     return user
 
-@router.get("/{current_user.username}/update_personal_info",response_model=UserInpi)
+@router.get("/update_personal_info",response_model=UserInpi)
 async def personal_info(
     current_user: Annotated[User, Depends(get_current_user)]
 ):
     if current_user:
         user=get_personal_info(fake_users_db,current_user.username)
+        return user
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_303_SEE_OTHER,
+            detail="Redirecting to login page",
+            headers={"Location": "/users/login"},
+            )
+
+@router.post("/update_personal_info/submit",response_model=UserInpi)
+async def submit_personal_info(
+    current_user: Annotated[User, Security(get_current_user)],
+    UserUpdate: UserInpi,
+):
+    if current_user:
+        user=update_personal_info(fake_users_db,current_user.username,UserUpdate)
         return user
     else:
         raise HTTPException(
@@ -120,21 +152,6 @@ async def certify_submit(certifying_username: str=Body(...),
             headers={"Date":datetime.now(),
                      "WWW-Authenticate": "Bearer"},
         )
-
-@router.post("/{current_user.username}/update_personal_info/submit",response_model=UserInpi)
-async def submit_personal_info(
-    current_user: Annotated[User, Depends(get_current_user)],
-    UserUpdate: UserInpi,
-):
-    if current_user:
-        user=update_personal_info(fake_users_db,current_user.username,UserUpdate)
-        return user
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_303_SEE_OTHER,
-            detail="Redirecting to login page",
-            headers={"Location": "/users/login"},
-            )
 
 @router.get("/register")
 async def register_page(current_user: User=Depends(get_current_user)):
