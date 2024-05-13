@@ -327,3 +327,14 @@ def updateFeedback(current_user: UserInDB,
     post=PostOut(**db_post[post_id])
     post.dict(exclude_unset=True)
     return post
+
+def updatesession(session: str,
+                  api_key: str,
+                  action: Literal["search","click","good","early","impossible"]="search",
+                  key_words: str=""):
+    if action=="search":
+        pass
+    elif action=="click":
+        pass
+    else:
+        pass
