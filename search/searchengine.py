@@ -1,6 +1,6 @@
-import nn
+from search import nn
 from enum import Enum
-net=nn.searchengine('sql.db')
+net=nn.searchnet('sql.db')
 
 class searchRange(Enum):
     all = 'all'
