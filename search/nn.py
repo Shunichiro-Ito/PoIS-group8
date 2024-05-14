@@ -29,12 +29,12 @@ class searchnet:
     def __del__(self):
         self.con.close()
 
-    def maketables(self):
-        self.con.query('create table hiddennode(create_key)')
-        self.con.query('create table wordhidden(fromid, toid, strength)') 
-        self.con.query('create table hiddenhidden(fromid, toid, strength)')
-        self.con.query('create table hiddenurl(fromid, toid, strength)')
-        self.con.commit()
+#    def maketables(self):
+#        self.con.query('create table hiddennode(create_key)')
+#        self.con.query('create table wordhidden(fromid, toid, strength)') relational table
+#        self.con.query('create table hiddenhidden(fromid, toid, strength)')
+#        self.con.query('create table hiddenurl(fromid, toid, strength)')
+#        self.con.commit()
     
     def getstrength(self, fromid, toid, layer):
         if layer == 0: table = 'wordhidden'
