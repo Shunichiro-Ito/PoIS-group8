@@ -63,3 +63,4 @@ class UserOut(UserCert):
 
 class Admin(BaseModel):
     username: str
+

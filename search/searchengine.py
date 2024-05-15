@@ -1,6 +1,6 @@
 from search import nn
 from enum import Enum
-net=nn.searchnet('sql.db')
+net=nn.searchnet()
 
 class searchRange(Enum):
     all = 'all'
@@ -8,11 +8,6 @@ class searchRange(Enum):
     user = 'user'
 
 class searcher():
-    def __init__(self,dbname):
-        self.con=mysql.connect(dbname)
-
-    def __del__(self):
-        self.con.close()
 
     def normalizescores(self,scores,smallIsBetter=0):
         vsmall=0.00001

@@ -8,3 +8,5 @@ pydantic[email]
 pytest
 trio
 fastapi_pagination
+pymysql
+databases

@@ -1,6 +1,6 @@
 from math import tanh
 from enum import Enum
-# import database py #
+import requests
 
 # Sigmoid function
 def dtanh(y):
@@ -23,11 +23,6 @@ class searchnet:
     
     
     """
-    def __init__(self, dbname):
-        self.con = mysql.connect(dbname)
-
-    def __del__(self):
-        self.con.close()
 
 #    def maketables(self):
 #        self.con.query('create table hiddennode(create_key)')

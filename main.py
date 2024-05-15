@@ -20,13 +20,15 @@ app=FastAPI(
     description="""
     先輩たちからの経験談。
     """,
-    version="0.0.1"
+    version="0.0.1",
+    
 )
 
 add_pagination(app)
 
 origins=[
     "http://localhost:3000",
+    "http://localhost:8000",
 ]
 
 app.add_middleware(

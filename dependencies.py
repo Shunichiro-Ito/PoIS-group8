@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone,date
 from typing import Annotated, Union,Literal
+from sql_app import crud
 
 from fakedb import fake_users_db
 
@@ -112,6 +113,7 @@ def create_new_user(
     x=vars(new_user)
     x.update({"hashed_password":get_password_hash(new_user.password)})
     x.update({"user_id":len(db)+1})
+    
     new_user_DB=UserInDB1(**x)
     new_user_DB=UserInDB(**vars(new_user_DB))
     db.update({new_user.username:vars(new_user_DB)})
