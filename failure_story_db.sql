@@ -151,5 +151,6 @@ url_id				VARCHAR(50)  		NOT NULL,
 url					VARCHAR(50)  		NOT NULL,
 category			ENUM("post", "user")	NOT NULL,
 user_id 				VARCHAR(50)  	NOT NULL,
-post_id					INT				NOT NULL
+post_id					INT				NOT NULL,
+PRIMARY KEY (url_id)
 );
