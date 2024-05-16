@@ -11,7 +11,7 @@ class action(Enum):
     impossible="impossible"
 
 class hiddennode(BaseModel):
-    id=int
+    id: int
     create_key: str
     layer: int
 
