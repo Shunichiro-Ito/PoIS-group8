@@ -1,5 +1,6 @@
 from search import nn
 from enum import Enum
+from sql import crud
 net=nn.searchnet()
 
 class searchRange(Enum):
@@ -23,17 +24,17 @@ class searcher():
     def nnscore(self,wordids,searchRange=all):
         # Get unique URL IDs as an ordered list
         if searchRange=='all':
-            rows=self.con.query('select rowid from urllist') #not ready
+            rows=crud.get_urls(net.db)
         elif searchRange=='post':
-            rows=self.con.query('select rowid from urllist where type="post"')
+            rows=crud.get_urls(net.db,type='post')
         elif searchRange=='user':
-            rows=self.con.query('select rowid from urllist where type="user"')
-        urlids=[urlid for urlid in set([row[0] for row in rows])]
+            rows=crud.get_urls(net.db,type='user')
+        urlids=[i.url_id for i in rows]
         nnres=net.getresult(wordids,urlids)
         scores=dict([urlids[i],nnres[i]] for i in range(len(urlids)))
         return self.normalizescores(scores)
     
     def query(self,wordids,searchRange=all):
         score=self.nnscore(wordids,searchRange)
-        postDetails=self.con.query('select * from postlist in(%s)' % ','.join([str(urlid) for urlid in score.keys()]))
-        return postDetails
+        urls=crud.get_urls(net.db,url_ids=score.keys())
+        return urls

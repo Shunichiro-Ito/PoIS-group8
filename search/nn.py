@@ -1,6 +1,9 @@
 from math import tanh
 from enum import Enum
-import requests
+from sql import crud
+from sql.database import SessionLocal
+from sql.schemas import nodes
+
 
 # Sigmoid function
 def dtanh(y):
@@ -23,6 +26,13 @@ class searchnet:
     
     
     """
+    def __init__(self,dbname):
+        self.db = SessionLocal()
+
+    def __del__(self):
+        self.db.close()
+
+
 
 #    def maketables(self):
 #        self.con.query('create table hiddennode(create_key)')
@@ -31,11 +41,12 @@ class searchnet:
 #        self.con.query('create table hiddenurl(fromid, toid, strength)')
 #        self.con.commit()
     
-    def getstrength(self, fromid, toid, layer):
-        if layer == 0: table = 'wordhidden'
-        elif layer == 1: table = 'hiddenhidden'
-        else: table = 'hiddenurl'
-        res = self.con.query('select strength from %s where fromid=%d and toid=%d' % (table, fromid, toid)).fetchone()
+    def getstrength(self,fromid, toid, layer):
+        if layer == 0: res=crud.get_wordhidden(self.db,fromid=fromid,toid=toid)
+        elif layer == 1: res=crud.get_hiddenhidden(self.db,fromid=fromid,toid=toid)
+        else: res=crud.get_hiddenurl(self.db,fromid=fromid,toid=toid)
+        
+        #res = self.con.query('select strength from %s where fromid=%d and toid=%d' % (table, fromid, toid)).fetchone()
         if res == None:
             if layer == 0: return -0.2
             if layer == 1: return 0
@@ -43,45 +54,52 @@ class searchnet:
         return res[0]
     
     def setstrength(self, fromid, toid, layer, strength):
-        if layer == 0: table = 'wordhidden'
-        else: table = 'hiddenurl'
-        res = self.con.query('select * from %s where fromid=%d and toid=%d' % (table, fromid, toid)).fetchone()
-        if res == None:
-            self.con.query('insert into %s (fromid, toid, strength) values (%d, %d, %f)' % (table, fromid, toid, strength))
-        else:
-            rowid = res[0]
-            self.con.query('update %s set strength=%f where rowid=%d' % (table, strength, rowid))
+        if layer == 0: 
+            wordhidden=nodes.wordhidden(fromid=fromid,toid=toid,strength=strength)
+            res=crud.update_wordhidden(self.db,wordhidden=wordhidden)
+        elif layer == 1: 
+            hiddenhidden=nodes.hiddenhidden(fromid=fromid,toid=toid,strength=strength)
+            res=crud.update_hiddenhidden(self.db,hiddenhidden=hiddenhidden)
+        else: 
+            hiddenurl=nodes.hiddenurl(fromid=fromid,toid=toid,strength=strength)
+            res=crud.update_hiddenurl(self.db,hiddenurl=hiddenurl)
+        
 
     def generatehiddennode(self, wordids, urls):
         if len(wordids) > 3: return None
         createkey = '_'.join(sorted([str(wi) for wi in wordids]))
-        res = self.con.query("select rowid from hiddennode where create_key='%s'" % createkey).fetchone()
+        res = crud.get_hiddennode(self.db,create_key=createkey,layer=0)
 
         if res == None:
-            cur = self.con.query("insert into hiddennode (create_key) values ('%s')" % createkey)
-            hiddenid = cur.lastrowid
+            hiddennode1=nodes.hiddennode(create_key=createkey,layer=0)
+            hiddennode2=nodes.hiddennode(create_key=hiddennode1.id,layer=1)
+            cur = crud.create_hiddennode(self.db,hiddennode=hiddennode1)
+            hiddenid1 = cur.id
+            cur = crud.create_hiddennode(self.db,hiddennode=hiddennode2)
+            hiddenid2=cur.id
             for wordid in wordids:
-                self.setStrength(wordid, hiddenid, 0, 1.0/len(wordids))
+                self.setstrength(wordid, hiddenid1, 0, 1.0/len(wordids))
+            
+            self.setstrength(hiddenid1, hiddenid2, 1, 0.1)
             for urlid in urls:
-                self.setStrength(hiddenid, urlid, 1, 0.1)
+                self.setstrength(hiddenid2, urlid, 2, 0.1)
             self.con.commit()
-
 
     def getallhiddenids(self, wordids, urlids):
         l1 = {}
         l2 = {}
         for wordid in wordids:
-            cur = self.con.query('select toid from wordhidden where fromid=%d' % wordid)
-            for row in cur: l1[row[0]] = 1
+            cur=crud.get_wordhidden(self.db,fromid=wordid)
+            for row in cur: l1[row['toid']] = 1
         for l1id in l1.keys():
-            cur = self.con.query('select toid from hiddenhidden where fromid=%d' % l1id)
-            for row in cur: l2[row[0]] = 1
+            cur = crud.get_hiddenhidden(self.db,fromid=l1id)
+            for row in cur: l2[row['toid']] = 1
         for urlid in urlids:
-            cur = self.con.query('select fromid from hiddenurl where toid=%d' % urlid)
-            for row in cur: l2[row[0]] = 1
+            cur = crud.get_hiddenurl(self.db,toid=urlid)
+            for row in cur: l2[row['fromid']] = 1
         for l2id in l2.keys():
-            cur = self.con.query('select fromid from hiddenhidden where toid=%d' % l2id)
-            for row in cur: l1[row[0]] = 1
+            cur = crud.get_hiddenhidden(self.db,toid=l2id)
+            for row in cur: l1[row['fromid']] = 1
         return l1.keys(),l2.keys()
     
     def setupnetwork(self, wordids, urlids):

@@ -40,7 +40,9 @@ class UserResetPW(BaseModel):
 class UserCert(User):
     certified: Optional[bool]=False
 
-class UserInDBpw(User):
+class UserInDBpw(BaseModel):
+    user_id: Union[int,None]
+    username: Union[str,None]
     hashed_password: str
 
 class UserInDBchar(User):

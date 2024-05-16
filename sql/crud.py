@@ -70,6 +70,12 @@ def get_post_reader(db: Session, user_id: int, post_id: int):
         models.Post_v_Readers.post_id == post_id
     ).first()
 
+def get_hiddennode(db: Session, create_key: str,layer: int):
+    return db.query(models.hiddennode).filter(
+        models.hiddennode.create_key == create_key,
+        models.hiddennode.layer == layer
+        ).first()
+
 @overload
 def get_wordhidden(db: Session, fromid: int):
     return db.query(models.wordhidden).filter(models.wordhidden.fromid == fromid).all()
@@ -88,6 +94,12 @@ def get_hiddenhidden(db: Session, fromid: int):
         ).all()
 
 @overload
+def get_hiddenhidden(db: Session, toid: int):
+    return db.query(models.hiddenhidden).filter(
+        models.hiddenhidden.toid == toid
+    ).all()
+
+@overload
 def get_hiddenhidden(db: Session, fromid: int, toid: int):
     return db.query(models.hiddenhidden).filter(
         models.hiddenhidden.fromid == fromid,
@@ -100,6 +112,11 @@ def get_hiddenurl(db: Session, fromid: int):
         models.hiddenurl.fromid == fromid
         ).all()
 
+def get_hiddenurl(db: Session, toid: int):
+    return db.query(models.hiddenurl).filter(
+        models.hiddenurl.toid == toid
+        ).all()
+
 @overload
 def get_hiddenurl(db: Session, fromid: int, toid: int):
     return db.query(models.hiddenurl).filter(
@@ -110,8 +127,17 @@ def get_hiddenurl(db: Session, fromid: int, toid: int):
 def get_userresponsecache(db: Session):
     return db.query(models.userResponseCache).all()
 
+@overload
 def get_urls(db: Session, url_ids: List[int]):
     return db.query(models.url).filter(models.url.url_id.in_(url_ids)).all()
+
+@overload
+def get_urls(db: Session):
+    return db.query(models.url).all()
+
+@overload
+def get_urls(db: Session, type: str):
+    return db.query(models.url).filter(models.url.type == type).all()
 
 def create_user(
         db: Session, 
@@ -217,7 +243,7 @@ def create_interest_tag(
 
 def create_hiddennode(
         db: Session, 
-        hiddennode: nodes.hiddennode
+        hiddennode: nodes.hiddennode,
 ):
     db_hiddennode=models.hiddennode(**hiddennode.model_dump())
     db.add(db_hiddennode)
@@ -365,9 +391,11 @@ def update_post_reader(
 
 def update_wordhidden(
         db: Session, 
-        wordhidden: models.wordhidden
+        wordhidden: nodes.wordhidden
 ):
     wordhiddenDB=get_wordhidden(db,wordhidden.fromid,wordhidden.toid)
+    if wordhiddenDB==None:
+        wordhiddenDB=create_wordhidden(db,wordhidden)
     wordhiddenDB.strength=wordhidden.strength
     db.commit()
     return {
@@ -376,7 +404,7 @@ def update_wordhidden(
 
 def update_hiddenhidden(
         db: Session, 
-        hiddenhidden: models.hiddenhidden
+        hiddenhidden: nodes.hiddenhidden
 ):
     hiddenhiddenDB=get_hiddenhidden(db,hiddenhidden.fromid,hiddenhidden.toid)
     hiddenhiddenDB.strength=hiddenhidden.strength
@@ -387,7 +415,7 @@ def update_hiddenhidden(
 
 def update_hiddenurl(
         db: Session, 
-        hiddenurl: models.hiddenurl
+        hiddenurl: nodes.hiddenurl
 ):
     hiddenurlDB=get_hiddenurl(db,hiddenurl.fromid,hiddenurl.toid)
     hiddenurlDB.strength=hiddenurl.strength

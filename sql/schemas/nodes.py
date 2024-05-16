@@ -11,7 +11,9 @@ class action(Enum):
     impossible="impossible"
 
 class hiddennode(BaseModel):
+    id=int
     create_key: str
+    layer: int
 
 class wordhidden(BaseModel):
     fromid: int

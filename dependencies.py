@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone,date
 from typing import Annotated, Union,Literal
-from sql_app import crud
+from sql import crud
+from sql.database import SessionLocal
 
 from fakedb import fake_users_db
 
@@ -10,7 +11,10 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from models.users import UserInDB1,UserInDB,TokenData,UserIn,UserOut,UserInpi,UserInDBtag
+from models.users import (
+    UserInDB1,UserInDB,TokenData,UserIn,UserOut,UserInpi,UserInDBtag,
+    UserInDBpw
+    )
 from models.posts import PostIn,PostInDB,PostOut
 
 # to get a string like this run:
@@ -24,6 +28,13 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/token",auto_error=False,)
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -32,20 +43,22 @@ def get_password_hash(password):
 
 
 def get_user(db, username: str):
-    if username in db:
-        user_dict = db[username]
-        return UserInDB(**user_dict)
+    user= crud.get_users(db, username=username)
+    if user:
+        return UserInDB(**user)
+    else:
+        return None
 
 def reset_password(db, username, old_password, new_password
 ):
     user=authenticate_user(db, username,old_password)
     if user:
-        user_inDB=db.get(user.username)
-        user_inDB.update({
+        userDB=UserInDBpw(**user)
+        userDB.update({
             "hashed_password":get_password_hash(new_password)
         })
-
-        return UserOut(**vars(user))
+        output=crud.update_user(db,username,userDB)
+        return UserOut(**output['user'])
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -73,7 +86,7 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     return encoded_jwt
 
 def create_refresh_token(username: str) -> str:
-    expire = datetime.utcnow() + timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now() + timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
     to_encode = {"sub": username, "exp": expire}
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -120,8 +133,7 @@ def create_new_user(
     return 
 
 def get_posts_by_user(
-        post_db, 
-        post_user_db,
+        db,
         currentuser: UserInDB,
         username:str
 ):
@@ -210,7 +222,7 @@ def read_user(db,
         )
     
 def get_disclosed_post(postout:PostOut,
-                       db_user,
+                       db,
                        post_username):
     post_user_InDB=UserInDB(**db_user.get(post_username))
     postout.username=post_username
@@ -275,8 +287,7 @@ def verify_admin(db,
 def upload_post_db(
         user: UserInDB,
         new_post: PostIn,
-        db,
-        db_post_user
+        db
 ):
     post_id=(len(db)+1)
     new_post_InDB=PostInDB(
@@ -301,8 +312,7 @@ def upload_post_db(
 def updateFeedback(current_user: UserInDB,
                    post_id: int,
                    feedback: str,
-                   db_feedback,
-                   db_post
+                   db
 ):
     feedback_ids=[k for k in db_feedback if db_feedback[k]["post_id"]==post_id 
                   and db_feedback[k]["user_id"]==current_user.user_id]
@@ -330,7 +340,8 @@ def updateFeedback(current_user: UserInDB,
     post.dict(exclude_unset=True)
     return post
 
-def updatesession(session: str,
+def updatesession(db,
+                  session: str,
                   api_key: str,
                   action: Literal["search","click","good","early","impossible"]="search",
                   key_words: str=""):

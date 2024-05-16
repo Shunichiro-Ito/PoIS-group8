@@ -122,7 +122,9 @@ class Post_v_Readers(Base):
 class hiddennode(Base):
     __tablename__ = "hiddennode"
 
-    create_key = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True)
+    create_key = Column(String)
+    layer = Column(Integer)
 
 class wordhidden(Base):
     __tablename__ = "wordhidden"
