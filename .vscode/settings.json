@@ -7,7 +7,7 @@
             },
             "previewLimit": 50,
             "server": "localhost",
-            "port": 3306,
+            "port": 33060,
             "driver": "MySQL",
             "name": "mysql",
             "database": "failure_story_db",

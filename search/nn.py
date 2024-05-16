@@ -26,7 +26,7 @@ class searchnet:
     
     
     """
-    def __init__(self,dbname):
+    def __init__(self):
         self.db = SessionLocal()
 
     def __del__(self):

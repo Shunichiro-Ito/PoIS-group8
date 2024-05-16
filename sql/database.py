@@ -7,7 +7,14 @@ from sqlalchemy.orm import (sessionmaker, relationship, scoped_session)
 sys.dont_write_bytecode = True
 
 #setting db connection
-url = "mysql+pymysql://root:group_8@localhost:3306/failure_story_db?charset=utf8"
+user = "user1"
+password = "PoIS-group8"
+host = "ip-172-31-93-14.ec2.internal:3306"
+db_name = ""
+
+#url = f"mysql+pymysql://{user}:{password}@{host}/{db_name}?charset=utf8"
+url = f'mysql+mysqlconnector://{user}:{password}@{host}/{db_name}?charset=utf8'
+#url = "mysql+pymysql://root:group_8@localhost:3306/failure_story_db?charset=utf8"
 engine = create_engine(url, echo=False, pool_recycle=10)
 
 #create session

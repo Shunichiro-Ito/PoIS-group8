@@ -2,7 +2,7 @@ from typing import List,Union
 from sqlalchemy.orm import Session
 
 import models
-from schemas import posts, users,nodes
+from sql.schemas import posts, users,nodes
 from typing import overload
 from fastapi import HTTPException
 

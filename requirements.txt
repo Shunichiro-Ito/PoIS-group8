@@ -10,3 +10,6 @@ trio
 fastapi_pagination
 pymysql
 databases
+mysql
+
+mysql-connector-python
