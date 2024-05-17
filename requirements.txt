@@ -13,3 +13,4 @@ databases
 mysql
 
 mysql-connector-python
+sshtunnel

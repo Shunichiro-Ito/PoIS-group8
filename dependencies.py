@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone,date
 from typing import Annotated, Union,Literal
 from sql import crud
-from sql.database import SessionLocal
+from sql.database import SQLSession
 
 from fakedb import fake_users_db
 
@@ -29,7 +29,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/token",auto_error=False,)
 
 def get_db():
-    db = SessionLocal()
+    db = SQLSession()
     try:
         yield db
     finally:

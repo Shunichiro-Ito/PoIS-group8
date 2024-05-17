@@ -28,6 +28,7 @@ add_pagination(app)
 
 origins=[
     "http://localhost:8000",
+    "http://localhost:3306",
 ]
 
 app.add_middleware(

@@ -1,7 +1,7 @@
 from math import tanh
 from enum import Enum
 from sql import crud
-from sql.database import SessionLocal
+from sql.database import SQLSession
 from sql.schemas import nodes
 
 
@@ -27,7 +27,7 @@ class searchnet:
     
     """
     def __init__(self):
-        self.db = SessionLocal()
+        self.db = SQLSession()
 
     def __del__(self):
         self.db.close()

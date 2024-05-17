@@ -30,7 +30,7 @@ from fastapi_pagination.customization import (
 )
 
 from sqlalchemy.orm import Session
-from sql.database import SessionLocal
+from sql.database import SQLSession
 from sql import crud
 from fakedb import fake_posts_db,fake_post_user_db,fake_users_db,fake_feedback_db
 from models.users import User

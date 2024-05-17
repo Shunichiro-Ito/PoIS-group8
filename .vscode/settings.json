@@ -15,6 +15,20 @@
             "connectionTimeout": 30,
             "socketPath": "",
             "askForPassword": true
+        },
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "previewLimit": 50,
+            "server": "ec2-3-84-162-249.compute-1.amazonaws.com",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "EC2",
+            "username": "user1",
+            "connectionTimeout": 30,
+            "database": "all"
         }
     ]
 }

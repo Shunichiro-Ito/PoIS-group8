@@ -9,7 +9,7 @@ from fastapi_pagination.links import Page
 from fastapi_pagination.cursor import CursorPage
 
 from sqlalchemy.orm import Session
-from sql.database import SessionLocal
+from sql.database import SQLSession
 from sql import crud
 from fakedb import fake_users_db,fake_post_user_db,fake_posts_db,fake_admin_db
 
