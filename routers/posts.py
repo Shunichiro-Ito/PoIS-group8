@@ -29,9 +29,9 @@ from fastapi_pagination.customization import (
     UseParamsFields,
 )
 
-from sqlalchemy.orm import Session
-from sql.database import SessionLocal
-from sql import crud
+#from sqlalchemy.orm import Session
+#from sql.database import SessionLocal
+#from sql import crud
 from fakedb import fake_posts_db,fake_post_user_db,fake_users_db,fake_feedback_db
 from models.users import User
 from models.posts import PostIn, Feedback
@@ -46,33 +46,6 @@ router = APIRouter(
 query_scheme=APIKeyQuery(name="searchresponse")
 cookie_scheme=APIKeyCookie(name="session")
 
-@router.get("/{post_id}")
-async def read_post(post_id: int,
-                    current_user: Annotated[User,Depends(get_current_user)],
-                    db: Session = Depends(get_db)):
-    return get_a_post(db,current_user,post_id)
-
-@router.get("/search/{key_words}")
-async def search_posts(key_words: str,
-                       current_user: Annotated[User,Depends(get_current_user)],
-                       cat: Literal["all","post","user"]="all",
-                       api_key:str=Depends(query_scheme),
-                       session:str=Depends(cookie_scheme)
-):
-    
-    search= searcher('mysql.db')
-    search_results=search.query(key_words,cat)
-    #use current user to rank the search results
-
-    #update session, key_words in database
-    updatesession(session,key_words,action="search")
-
-    return {
-        "search_results":search_results,
-        "api_key":api_key,
-        "session":session,
-    }
-
 @router.post("/click_post")
 async def click_post(post_id:int,
                      session:str=Depends(cookie_scheme),
@@ -85,8 +58,9 @@ async def click_post(post_id:int,
 async def submit_post(
     current_user: Annotated[User, Depends(get_current_user)],
     new_post: PostIn,
-    db: Session = Depends(get_db)
+    #db: Session = Depends(get_db)
 ):
+    db=fake_posts_db
     if current_user:
         post_id=upload_post_db(current_user,new_post,db=db)
         return RedirectResponse(f"/posts/{post_id}",status_code=status.HTTP_303_SEE_OTHER)
@@ -107,9 +81,10 @@ async def feedback(current_user: Annotated[User,Depends(get_current_user)],
                    feedback: Feedback=Form(...),
                    session:str=Depends(cookie_scheme),
                    api_key:str=Depends(query_scheme),
-                   db: Session = Depends(get_db)
+                   #db: Session = Depends(get_db)
 ):
     if current_user:
+        db=fake_feedback_db
         str_feedback=feedback.value
         updatesession(session,api_key,action=feedback)
         return updateFeedback(current_user,post_id,str_feedback,db=db)
@@ -120,4 +95,31 @@ async def feedback(current_user: Annotated[User,Depends(get_current_user)],
             headers={"WWW-Authenticate": "Bearer"},
             )
     
+@router.get("/{post_id}")
+async def read_post(post_id: int,
+                    current_user: Annotated[User,Depends(get_current_user)],
+                    #db: Session = Depends(get_db)
+):
+    db=fake_posts_db
+    return get_a_post(db,current_user,post_id)
+
+@router.get("/search/{key_words}")
+async def search_posts(key_words: str,
+                       current_user: Annotated[User,Depends(get_current_user)],
+                       cat: Literal["all","post","user"]="all",
+                       api_key:str=Depends(query_scheme),
+                       session:str=Depends(cookie_scheme)
+):
     
+    search= searcher()
+    search_results=search.query(key_words,cat)
+    #use current user to rank the search results
+
+    #update session, key_words in database
+    updatesession(session,key_words,action="search")
+
+    return {
+        "search_results":search_results,
+        "api_key":api_key,
+        "session":session,
+    }

@@ -26,28 +26,43 @@ app=FastAPI(
 
 add_pagination(app)
 
-origins=[
-    "http://localhost:8000",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(users.router)
-app.include_router(posts.router)
 
 # Not ready
 @app.get("/",tags=["home"])
 async def root(current_user: Annotated[User, Depends(get_current_user)]):
+
     if current_user:
         if not show_tags(fake_users_db,current_user):
             return RedirectResponse("/users/interest_tags")
         else:
             return {"message":"timeline of posts","detail":current_user}
     else:
-        return RedirectResponse("/users/login")
+        return RedirectResponse("/login")
+
+origins=[
+    "http://localhost:3306",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+app.include_router(users.router)
+app.include_router(posts.router)
+
+
+@app.get('/login')
+async def login_page():
+    return {"message":"login page"}
+
+
+
+
+#import uvicorn
+#if __name__ == "__main__":
+#  uvicorn.run("fapi:app", host="0.0.0.0", port=8000, reload=True)

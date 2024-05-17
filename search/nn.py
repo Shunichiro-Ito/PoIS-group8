@@ -1,8 +1,10 @@
 from math import tanh
 from enum import Enum
-from sql import crud
-from sql.database import SessionLocal
-from sql.schemas import nodes
+#from sql import crud
+#from sql.database import SessionLocal
+#from sql.schemas import nodes
+
+import fakedb
 
 
 # Sigmoid function
@@ -26,11 +28,13 @@ class searchnet:
     
     
     """
-    def __init__(self,dbname):
-        self.db = SessionLocal()
+    def __init__(self):
+        self.db = fakedb
+        #SessionLocal()
 
     def __del__(self):
-        self.db.close()
+        #self.db.close()
+        pass
 
 
 

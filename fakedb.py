@@ -154,3 +154,115 @@ fake_feedback_db={
         feedback="early"
     ),
 }
+
+posts_v_tfidf={
+    1:dict(
+        post_id=1,
+        tfidf_0=0.5,
+        tfidf_1=0.2,
+        tfidf_2=0.9,
+        tfidf_3=0.1,
+        tfidf_4=0.3,
+        tfidf_5=0.4,
+        tfidf_6=0.5,
+        tfidf_7=0.6,
+        tfidf_8=0.7,
+        tfidf_9=0.8,
+        tfidf_10=0.9,
+        tfidf_11=0.1,
+        tfidf_12=0.2,
+        tfidf_13=0.3,
+        tfidf_14=0.4,
+        tfidf_15=0.5,
+        tfidf_16=0.6,
+        tfidf_17=0.7,
+        tfidf_18=0.8,
+        tfidf_19=0.9,
+    ),
+    2:dict(
+        post_id=2,
+        tfidf_0=0.5,
+        tfidf_1=0.2,
+        tfidf_2=0.9,
+        tfidf_3=0.1,
+        tfidf_4=0.3,
+        tfidf_5=0.4,
+        tfidf_6=0.5,
+        tfidf_7=0.6,
+        tfidf_8=0.7,
+        tfidf_9=0.8,
+        tfidf_10=0.9,
+        tfidf_11=0.1,
+        tfidf_12=0.2,
+        tfidf_13=0.3,
+        tfidf_14=0.4,
+        tfidf_15=0.5,
+        tfidf_16=0.6,
+        tfidf_17=0.7,
+        tfidf_18=0.8,
+        tfidf_19=0.9,
+    )
+}
+
+fake_post_writer_init_db={
+    1:dict(
+        user_id=0,
+        post_id=1,
+        category_id=1,
+        age=20,
+        gender="m",
+        occupation="admin"
+    ),
+    2:dict(
+        user_id=3,
+        post_id=2,
+        category_id=1,
+        age=20,
+        gender="f",
+        occupation="clerk"
+    )
+}
+
+fake_post_writer_dynamic_db={
+    1:dict(
+        user_id=0,
+        post_id=1,
+        category_id=1,
+        age=20,
+        gender="m",
+        occupation="admin",
+        mbti="INTP"
+    ),
+    2:dict(
+        user_id=3,
+        post_id=2,
+        category_id=1,
+        age=20,
+        gender="f",
+        occupation="clerk",
+        mbti="ISFP"
+    )
+}
+
+fake_post_reader_db={
+    1:dict(
+        user_id=2,
+        post_id=1,
+        feedback="good"
+    ),
+    2:dict(
+        user_id=2,
+        post_id=2,
+        feedback="impossible"
+    ),
+    3:dict(
+        user_id=3,
+        post_id=2,
+        feedback="good"
+    ),
+    4:dict(
+        user_id=1,
+        post_id=2,
+        feedback="early"
+    ),
+}

@@ -1,6 +1,6 @@
 from search import nn
 from enum import Enum
-from sql import crud
+#from sql import crud
 net=nn.searchnet()
 
 class searchRange(Enum):

@@ -1,15 +1,16 @@
 from datetime import datetime, timedelta, timezone,date
 from typing import Annotated, Union,Literal
-from sql import crud
-from sql.database import SessionLocal
+#from sql import crud
+#from sql.database import SessionLocal
 
-from fakedb import fake_users_db
+from fakedb import fake_users_db, fake_posts_db, fake_post_user_db, fake_feedback_db
 
 from fastapi import Depends,HTTPException, status,Header,Cookie
 from fastapi_pagination import Page, paginate
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from fakedb import fake_users_db
 
 from models.users import (
     UserInDB1,UserInDB,TokenData,UserIn,UserOut,UserInpi,UserInDBtag,
@@ -22,14 +23,13 @@ from models.posts import PostIn,PostInDB,PostOut
 SECRET_KEY = "ThisIsAWebsiteAboutSavingUrAXX"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/token",auto_error=False,)
 
 def get_db():
-    db = SessionLocal()
+    db = None #SessionLocal()
     try:
         yield db
     finally:
@@ -43,7 +43,7 @@ def get_password_hash(password):
 
 
 def get_user(db, username: str):
-    user= crud.get_users(db, username=username)
+    user= db[username] #crud.get_users(db, username=username)
     if user:
         return UserInDB(**user)
     else:
@@ -57,7 +57,7 @@ def reset_password(db, username, old_password, new_password
         userDB.update({
             "hashed_password":get_password_hash(new_password)
         })
-        output=crud.update_user(db,username,userDB)
+        output=db.update({username:userDB}) #crud.update_user(db,username,userDB)
         return UserOut(**output['user'])
     else:
         raise HTTPException(
@@ -83,12 +83,6 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-    return encoded_jwt
-
-def create_refresh_token(username: str) -> str:
-    expire = datetime.now() + timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
-    to_encode = {"sub": username, "exp": expire}
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 async def get_current_user(token: Annotated[TokenData, Depends(oauth2_scheme)]):

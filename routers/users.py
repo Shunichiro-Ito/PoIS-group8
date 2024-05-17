@@ -8,15 +8,14 @@ from fastapi_pagination import paginate
 from fastapi_pagination.links import Page
 from fastapi_pagination.cursor import CursorPage
 
-from sqlalchemy.orm import Session
-from sql.database import SessionLocal
-from sql import crud
+#from sqlalchemy.orm import Session
+#from sql.database import SessionLocal
+#from sql import crud
 from fakedb import fake_users_db,fake_post_user_db,fake_posts_db,fake_admin_db
 
 from models.users import Token,User,UserIn,UserResetPW,UserInpw,UserOut,UserInpi,UserIntag,UserInDB
 from dependencies import (authenticate_user,
                           create_access_token,
-                          create_refresh_token,
                           get_current_user,
                           ACCESS_TOKEN_EXPIRE_MINUTES,
                           create_new_user,
@@ -36,14 +35,7 @@ router = APIRouter(
     tags=["Users"],
     dependencies=[]
     )
-
-
-@router.get('/login')
-async def login_page(current_user: User=Depends(get_current_user)):
-    if not current_user:
-        return {"message":"login page"}
-    else:
-        return RedirectResponse("/")
+    
 
 @router.post("/token",response_model=Token)
 async def login_for_access_token(
@@ -61,30 +53,7 @@ async def login_for_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     
-    refresh_token = create_refresh_token(user.username)
-    
-    return Token(access_token=access_token,refresh_token=refresh_token, token_type="bearer")
-
-@router.post("/refresh_token")
-async def refresh_token(current_user: User = Security(get_current_user, scopes=["refresh_token"])):
-    if current_user:
-            access_token = create_access_token(
-                data={"sub": current_user.username}
-            )
-            return {"access_token": access_token}
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-            headers={"WWW-Authenticate": "Bearer",
-                    "Current User":current_user.username},
-        )
-
-@router.get("/{current_user.username}/", response_model=User)
-async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_user)],
-):
-    return current_user
+    return Token(access_token=access_token, token_type="bearer")
 
 @router.post("/reset_password",response_model=UserOut)
 async def reset_password_post(
@@ -195,6 +164,12 @@ async def get_me(current_user: User = Depends(get_current_user)):
 @router.get("/{username}")
 async def get_user_page(username: str):
     return read_user(fake_users_db,username)
+
+@router.get("/{current_user.username}/", response_model=User)
+async def read_users_me(
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    return current_user
 
 # not ready
 # https://uriyyo-fastapi-pagination.netlify.app/tutorials/cursor-pagination/
