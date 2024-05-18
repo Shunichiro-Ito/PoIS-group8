@@ -3,6 +3,7 @@ from enum import Enum
 from sql import crud
 #from sql.database import SessionLocal
 from sql.schemas import nodes
+from sqlalchemy.orm import Session
 
 import fakedb_search
 
@@ -29,7 +30,7 @@ class searchnet:
     
     """
     def __init__(self):
-        self.db = 
+        self.db = Session()
         #SessionLocal()
 
     def __del__(self):

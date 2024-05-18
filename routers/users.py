@@ -133,16 +133,12 @@ async def register_page(current_user: User=Depends(get_current_user)):
         return RedirectResponse("/",status_code=status.HTTP_303_SEE_OTHER)
 
 @router.post("/register")
-async def create_user(user:UserIn,
-                      current_user: User=Depends(get_current_user)):
-    if not current_user:
-        if user.username not in fake_users_db:
-            create_new_user(fake_users_db,user)
-            return RedirectResponse('/users/login',status_code=status.HTTP_303_SEE_OTHER)
-        else:
-            return {'message':'your username is already used.'}
+async def create_user(user:UserIn):
+    if user.username not in fake_users_db:
+        create_new_user(fake_users_db,user)
+        return RedirectResponse('/users/login',status_code=status.HTTP_303_SEE_OTHER)
     else:
-        return RedirectResponse('/',status_code=status.HTTP_303_SEE_OTHER)
+        return {'message':'your username is already used.'}
 
 @router.get("/interest_tags")
 async def get_user_tag(current_user: User=Depends(get_current_user)):

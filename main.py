@@ -35,7 +35,7 @@ add_pagination(app)
 
 # Not ready
 @app.get("/",tags=["home"])
-async def root(current_user: Annotated[User, Depends(get_current_user)]):
+async def root():
     current_user=User(get_current_user())
     if current_user:
         if not show_tags(fake_users_db,current_user):
