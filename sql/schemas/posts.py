@@ -22,7 +22,8 @@ class Post(BaseModel):
     anonymous: bool
 
     class Config:
-        orm_mode = True
+        #orm_mode = True
+        pass
 
 class Post_v_tfidfnoId(BaseModel):
     tfidf_0: float

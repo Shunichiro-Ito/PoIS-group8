@@ -63,13 +63,15 @@ class UserInDBtag(BaseModel):
     interested_tag: list
 
     class Config:
-        orm_mode=True
+        #orm_mode=True
+        pass
 
 class UserInDB1(UserInDBchar,UserInDBpw):
     user_id: int
 
     class Config:
-        orm_mode=True
+        #orm_mode=True
+        pass
 
 class UserInDB(UserInDBchar,UserInDBpw,UserCert):
     user_id: int

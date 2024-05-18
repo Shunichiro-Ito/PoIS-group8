@@ -29,7 +29,7 @@ class searchnet:
     
     """
     def __init__(self):
-        self.db = fakedb_search
+        self.db = 
         #SessionLocal()
 
     def __del__(self):

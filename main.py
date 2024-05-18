@@ -7,7 +7,12 @@ from fastapi import (
     FastAPI,
 )
 
-from typing import Annotated
+from fastapi.security import APIKeyQuery
+
+query_scheme = APIKeyQuery(name="searchresponse")
+cookie_scheme = APIKeyQuery(name="session")
+
+from typing import Annotated,Literal
 from models.users import User
 from dependencies import get_current_user,show_tags,verify_admin
 
@@ -31,7 +36,7 @@ add_pagination(app)
 # Not ready
 @app.get("/",tags=["home"])
 async def root(current_user: Annotated[User, Depends(get_current_user)]):
-
+    current_user=User(get_current_user())
     if current_user:
         if not show_tags(fake_users_db,current_user):
             return RedirectResponse("/users/interest_tags")
@@ -69,8 +74,19 @@ async def train_neural_network(admin:User=Annotated[User,Depends(verify_admin)])
 @app.post('/neural_network/train')
 async def train_neural_network(admin:User=Annotated[User,Depends(verify_admin)]):
     Search=searcher()
-    Search
+    
     return Search.train()
+
+@app.get('/search/{key_words}')
+async def search_posts(key_words: str,
+                       current_user: Annotated[User,Depends(get_current_user)],
+                       cat: Literal["all","post","user"]="all",
+                       api_key:str=Depends(query_scheme),
+                       session:str=Depends(cookie_scheme)
+):
+    Search=searcher()
+    Search.query()
+    return Search.search(key_words,cat)
 
 
 
