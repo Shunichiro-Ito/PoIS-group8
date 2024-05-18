@@ -9,30 +9,41 @@ import fakedb,fakedb_search
 
 @overload
 def get_feedback(db: Session, post_id: int, user_id: int):
-    return [fakedb.fake_feedback_db[i] 
-            for i in fakedb.fake_feedback_db 
-            if i['post_id']==post_id and i['user_id']==user_id
-    ][0]
-    return db.query(models.Feedback).filter(
-        models.Feedback.post_id == post_id,
-        models.Feedback.user_id == user_id
-    ).first()
+    ...
 
 @overload
 def get_feedback(db: Session, post_id: int):
-    return [fakedb.fake_feedback_db[i] 
-            for i in fakedb.fake_feedback_db 
-            if i['post_id']==post_id
-    ]
-    return db.query(models.Feedback).filter(models.Feedback.post_id == post_id).all()
+    ...
 
 @overload
 def get_feedback(db: Session, user_id: int):
-    return [fakedb.fake_feedback_db[i] 
-            for i in fakedb.fake_feedback_db 
-            if i['user_id']==user_id
-    ]
-    return db.query(models.Feedback).filter(models.Feedback.user_id == user_id).all()
+    ...
+
+def get_feedback(db: Session,post_id: Union[int,None],user_id: Union[int,None]):
+    if post_id and user_id:
+        return [fakedb.fake_feedback_db[i] 
+                for i in fakedb.fake_feedback_db 
+                if i['post_id']==post_id and i['user_id']==user_id
+        ][0]
+        return db.query(models.Feedback).filter(
+            models.Feedback.post_id == post_id,
+            models.Feedback.user_id == user_id
+        ).first()
+    elif post_id:
+        return [fakedb.fake_feedback_db[i] 
+                for i in fakedb.fake_feedback_db 
+                if i['post_id']==post_id
+        ]
+        return db.query(models.Feedback).filter(models.Feedback.post_id == post_id).all()
+    elif user_id:
+        return [fakedb.fake_feedback_db[i] 
+                for i in fakedb.fake_feedback_db 
+                if i['user_id']==user_id
+        ]
+        return db.query(models.Feedback).filter(models.Feedback.user_id == user_id).all()
+    else:
+        return fakedb.fake_feedback_db
+        return db.query(models.Feedback).all()
 
 @overload
 def get_users(db: Session, user_id: int):
@@ -58,30 +69,31 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 def get_users(db: Session, all=True):
     return fakedb.fake_users_db
     return db.query(models.User).all()
+
 def get_users(
         db: Session, 
-        user_id: Union[int, List[int], None] = None,
+        user_id: Optional[int] = None,
+        user_ids: Optional[List[int]] = None,
         username: Optional[str] = None,
         skip: int = 0,
-        limit: int = 100
+        limit: int = 100,
+        all: bool = False
 ):
-
-    # If 'username' is provided, return the user matching that username
-    if username:
+    if isinstance(user_id,int):
+        return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db if i['user_id']==user_id][0]
+        return db.query(models.User).filter(models.User.user_id == user_id).first()
+    elif isinstance(user_ids,list):
+        return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db if i['user_id'] in user_id]
+        return db.query(models.User).filter(models.User.user_id.in_(user_ids)).all()
+    elif username:
         return fakedb.fake_users_db.get(username)
         return db.query(models.User).filter(models.User.username == username).first()
-        
-    # If 'user_id' is provided and it's a list, return users matching those IDs
-    if isinstance(user_id, list):
-        return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db if i['user_id'] in user_id] if db is None else db.query(models.User).filter(models.User.user_id.in_(user_id)).all()
-
-    # If 'user_id' is provided and it's a single ID, return the user matching that ID
-    if isinstance(user_id, int):
-        return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db if i['user_id'] == user_id][0] if db is None else db.query(models.User).filter(models.User.user_id == user_id).first()
-
-
-    # Default case: return users with pagination
-    return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db][skip:skip+limit] if db is None else db.query(models.User).offset(skip).limit(limit).all()
+    elif all:
+        return fakedb.fake_users_db
+        return db.query(models.User).all()
+    else:
+        return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db][skip:skip+limit]
+        return db.query(models.User).offset(skip).limit(limit).all()
 
 def get_admin(db: Session, admin_id: int):
     admin=get_users(db,admin_id)
@@ -90,69 +102,108 @@ def get_admin(db: Session, admin_id: int):
 
 @overload
 def get_tags(db: Session, user_id: int):
-    return [fakedb.fake_interest_tag_db[i] for i in fakedb.fake_interest_tag_db if i['user_id']==user_id]
-    return db.query(models.interest_tag).filter(models.interest_tag.user_id == user_id).all()
+    ...
 
 @overload
 def get_tags(db: Session, username: str):
-    return [fakedb.fake_interest_tag_db[i] for i in fakedb.fake_interest_tag_db if i['user_id']==get_users(db,username=username)['user_id']]
-    return db.query(models.interest_tag).filter(models.User.user_name == username).all()
+    ...
+
+def get_tags(
+        db: Session, 
+        user_id: Optional[int] = None,
+        username: Optional[str] = None
+):
+    if user_id:
+        return [fakedb.fake_interest_tag_db[i] for i in fakedb.fake_interest_tag_db if i['user_id']==user_id]
+        return db.query(models.interest_tag).filter(models.interest_tag.user_id == user_id).all()
+    elif username:
+        return [fakedb.fake_interest_tag_db[i] for i in fakedb.fake_interest_tag_db if i['user_id']==get_users(db,username=username)['user_id']]
+        return db.query(models.interest_tag).filter(models.User.user_name == username).all()
 
 @overload
 def get_posts(db: Session, skip: int = 0, limit: int = 100,anonymousIncluded: bool=False):
-    return [fakedb.fake_posts_db[i] for i in fakedb.fake_posts_db if fakedb.fake_posts_db[i]['anonymous']==anonymousIncluded][skip:skip+limit]
-    return db.query(models.Post).offset(skip).limit(limit).filter(
-            models.Post.anonymous==anonymousIncluded
-        ).all()
+    ...
 
 @overload
 def get_posts(db: Session, post_ids: List[int],anonymousIncluded: bool=False):
-    return [fakedb.fake_posts_db[i] for i in fakedb.fake_posts_db if i['post_id'] in post_ids]
-    return db.query(models.Post).filter(
-            models.Post.post_id.in_(post_ids),models.Post.anonymous==anonymousIncluded
-        ).all()
+    ...
 
 @overload
 def get_posts(db: Session, post_ids: List[int], username: str):
-    user_id=get_users(db,username=username)['user_id']
-    return [fakedb.fake_posts_db[i] 
-            for i in fakedb.fake_posts_db 
-            if i['post_id'] in post_ids and (
-                fakedb.fake_posts_db[i]['anonymous']==False or 
-                fakedb.fake_post_user_db[i]['user_id']==user_id
-            )
-    ]
-    
-    return db.query(models.Post).filter(
-            models.Post.post_id.in_(post_ids),
-            or_(models.Post.user_id == user_id, models.Post.anonymous==False)
-        ).all()
+    ...
 
 @overload
 def get_posts(db: Session, user_id: int,anonymousIncluded: bool=False):
-    allposts= [fakedb.fake_posts_db[fakedb.fake_post_user_db[i]['post_id']] 
-            for i in fakedb.fake_post_user_db 
-            if fakedb.fake_post_user_db[i]['user_id']==user_id]
-    if anonymousIncluded:
-        return allposts
-    else:
-        return [i for i in allposts if i['anonymous']==False]
-    if anonymousIncluded:
-        db.query(models.Post).filter(models.Post.user_id == user_id).all()
-    else:
+    ...
+
+def get_posts(
+        db: Session, 
+        post_ids: Optional[List[int]] = None,
+        username: Optional[str] = None,
+        user_id: Optional[int] = None,
+        skip: int = 0, 
+        limit: int = 100,
+        anonymousIncluded: bool = False
+):
+    if post_ids and username:
+        user_id=get_users(db,username=username)['user_id']
+        return [fakedb.fake_posts_db[i] 
+                for i in fakedb.fake_posts_db 
+                if i['post_id'] in post_ids and (
+                    fakedb.fake_posts_db[i]['anonymous']==False or 
+                    fakedb.fake_post_user_db[i]['user_id']==user_id
+                )
+        ]
+        user_id=get_users(db,username=username)['user_id']
         return db.query(models.Post).filter(
-            models.Post.user_id == user_id,models.Post.anonymous==False
-        ).all()
+                models.Post.post_id.in_(post_ids),
+                or_(models.Post.user_id == user_id, models.Post.anonymous==False)
+            ).all()
+    elif post_ids:
+        return [fakedb.fake_posts_db[i] for i in fakedb.fake_posts_db if i['post_id'] in post_ids]
+        return db.query(models.Post).filter(
+                models.Post.post_id.in_(post_ids),models.Post.anonymous==anonymousIncluded
+            ).all()
+    elif user_id:
+        allposts= [fakedb.fake_posts_db[fakedb.fake_post_user_db[i]['post_id']] 
+                for i in fakedb.fake_post_user_db 
+                if fakedb.fake_post_user_db[i]['user_id']==user_id]
+        if anonymousIncluded:
+            return allposts
+        else:
+            return [i for i in allposts if i['anonymous']==False]
+        if anonymousIncluded:
+            db.query(models.Post).filter(models.Post.user_id == user_id).all()
+        else:
+            return db.query(models.Post).filter(
+                models.Post.user_id == user_id,models.Post.anonymous==False
+            ).all()
+    else:
+        return [fakedb.fake_posts_db[i] for i in fakedb.fake_posts_db if fakedb.fake_posts_db[i]['anonymous']==anonymousIncluded][skip:skip+limit]
+        return db.query(models.Post).offset(skip).limit(limit).filter(
+                models.Post.anonymous==anonymousIncluded
+            ).all()
 
 @overload
 def get_categories(db: Session, skip: int = 0, limit: int = 100):
-    return [fakedb.fake_category_db[i] for i in fakedb.fake_category_db][skip:skip+limit]
-    return db.query(models.Category).offset(skip).limit(limit).all()
+    ...
 
 @overload
 def get_categories(db: Session, category_ids: List[int]):
-    return [fakedb.fake_category_db[i] for i in fakedb.fake_category_db if i['tag_id'] in category_ids]
-    return db.query(models.Category).filter(models.Category.category_id.in_(category_ids)).all()
+    ...
+
+def get_categories(
+        db: Session,
+        category_ids: Optional[List[int]] = None,
+        skip: int = 0,
+        limit: int = 100
+):
+    if category_ids:
+        return [fakedb.fake_category_db[i] for i in fakedb.fake_category_db if i['tag_id'] in category_ids]
+        return db.query(models.Category).filter(models.Category.category_id.in_(category_ids)).all()
+    else:
+        return [fakedb.fake_category_db[i] for i in fakedb.fake_category_db][skip:skip+limit]
+        return db.query(models.Category).offset(skip).limit(limit).all()
 
 def get_tfidf(db: Session, post_id: int):
     return fakedb.posts_v_tfidf.get(post_id)
@@ -201,109 +252,164 @@ def get_hiddennode(db: Session, create_key: str,layer: int):
 
 @overload
 def get_wordhidden(db: Session, fromid: int):
-    return [fakedb_search.fake_wordhidden_db[i] 
-            for i in fakedb_search.fake_wordhidden_db 
-            if i['fromid']==fromid
-    ]
-    return db.query(models.wordhidden).filter(models.wordhidden.fromid == fromid).all()
+    ...
 
 @overload
 def get_wordhidden(db: Session, fromid: int, toid: int):
-    return [fakedb_search.fake_wordhidden_db[i] 
-            for i in fakedb_search.fake_wordhidden_db 
-            if i['fromid']==fromid and i['toid']==toid
-    ][0]
-    return db.query(models.wordhidden).filter(
-        models.wordhidden.fromid == fromid,
-        models.wordhidden.toid == toid
-    ).first()
+    ...
+
+def get_wordhidden(
+        db: Session, 
+        fromid: Optional[int] = None,
+        toid: Optional[int] = None
+):
+    if fromid and toid:
+        return [fakedb_search.fake_wordhidden_db[i] 
+                for i in fakedb_search.fake_wordhidden_db 
+                if i['fromid']==fromid and i['toid']==toid
+        ][0]
+        return db.query(models.wordhidden).filter(
+            models.wordhidden.fromid == fromid,
+            models.wordhidden.toid == toid
+        ).first()
+    elif toid:
+        return [fakedb_search.fake_wordhidden_db[i] 
+                for i in fakedb_search.fake_wordhidden_db 
+                if i['fromid']==fromid and i['toid']==toid
+        ][0]
+        return db.query(models.wordhidden).filter(
+            models.wordhidden.fromid == fromid,
+            models.wordhidden.toid == toid
+        ).first()
+    elif fromid:
+        return [fakedb_search.fake_wordhidden_db[i] 
+                for i in fakedb_search.fake_wordhidden_db 
+                if i['fromid']==fromid
+        ]
+        return db.query(models.wordhidden).filter(models.wordhidden.fromid == fromid).all()
 
 @overload
 def get_hiddenhidden(db: Session, fromid: int):
-    return [fakedb_search.fake_hiddenhidden_db[i]
-            for i in fakedb_search.fake_hiddenhidden_db
-            if i['fromid']==fromid
-    ]
-    return db.query(models.hiddenhidden).filter(
-        models.hiddenhidden.fromid == fromid
-        ).all()
+    ...
 
 @overload
 def get_hiddenhidden(db: Session, toid: int):
-    return [fakedb_search.fake_hiddenhidden_db[i]
-            for i in fakedb_search.fake_hiddenhidden_db
-            if i['toid']==toid
-    ]
-    return db.query(models.hiddenhidden).filter(
-        models.hiddenhidden.toid == toid
-    ).all()
+    ...
 
 @overload
 def get_hiddenhidden(db: Session, fromid: int, toid: int):
-    return [fakedb_search.fake_hiddenhidden_db[i]
-            for i in fakedb_search.fake_hiddenhidden_db
-            if i['fromid']==fromid and i['toid']==toid
-    ][0]
-    return db.query(models.hiddenhidden).filter(
-        models.hiddenhidden.fromid == fromid,
-        models.hiddenhidden.toid == toid
-    ).first()
+    ...
+
+def get_hiddenhidden(
+        db: Session, 
+        fromid: Optional[int] = None,
+        toid: Optional[int] = None
+):
+    if fromid and toid:
+        return [fakedb_search.fake_hiddenhidden_db[i]
+                for i in fakedb_search.fake_hiddenhidden_db
+                if i['fromid']==fromid and i['toid']==toid
+        ][0]
+        return db.query(models.hiddenhidden).filter(
+            models.hiddenhidden.fromid == fromid,
+            models.hiddenhidden.toid == toid
+        ).first()
+    elif toid:
+        return [fakedb_search.fake_hiddenhidden_db[i]
+                for i in fakedb_search.fake_hiddenhidden_db
+                if i['toid']==toid
+        ]
+        return db.query(models.hiddenhidden).filter(
+            models.hiddenhidden.toid == toid
+        ).all()
+    elif fromid:
+        return [fakedb_search.fake_hiddenhidden_db[i]
+                for i in fakedb_search.fake_hiddenhidden_db
+                if i['fromid']==fromid
+        ]
+        return db.query(models.hiddenhidden).filter(
+            models.hiddenhidden.fromid == fromid
+            ).all()
 
 @overload
 def get_hiddenurl(db: Session, fromid: int):
-    return [fakedb_search.fake_hiddenurl_db[i]
-            for i in fakedb_search.fake_hiddenurl_db
-            if i['fromid']==fromid
-    ]
-    return db.query(models.hiddenurl).filter(
-        models.hiddenurl.fromid == fromid
-        ).all()
+    ...
 
 @overload
 def get_hiddenurl(db: Session, toid: int):
-    return [fakedb_search.fake_hiddenurl_db[i]
-            for i in fakedb_search.fake_hiddenurl_db
-            if i['toid']==toid
-    ]
-    return db.query(models.hiddenurl).filter(
-        models.hiddenurl.toid == toid
-        ).all()
+    ...
 
 @overload
 def get_hiddenurl(db: Session, fromid: int, toid: int):
-    return [fakedb_search.fake_hiddenurl_db[i]
-            for i in fakedb_search.fake_hiddenurl_db
-            if i['fromid']==fromid and i['toid']==toid
-    ][0]
-    return db.query(models.hiddenurl).filter(
-        models.hiddenurl.fromid == fromid,
-        models.hiddenurl.toid == toid
-    ).first()
+    ...
 
+def get_hiddenurl(
+        db: Session,
+        fromid: Optional[int] = None,
+        toid: Optional[int] = None
+):
+    if fromid and toid:
+        return [fakedb_search.fake_hiddenurl_db[i]
+                for i in fakedb_search.fake_hiddenurl_db
+                if i['fromid']==fromid and i['toid']==toid
+        ][0]
+        return db.query(models.hiddenurl).filter(
+            models.hiddenurl.fromid == fromid,
+            models.hiddenurl.toid == toid
+        ).first()
+    elif toid:
+        return [fakedb_search.fake_hiddenurl_db[i]
+                for i in fakedb_search.fake_hiddenurl_db
+                if i['toid']==toid
+        ]
+        return db.query(models.hiddenurl).filter(
+            models.hiddenurl.toid == toid
+            ).all()
+    elif fromid:
+        return [fakedb_search.fake_hiddenurl_db[i]
+                for i in fakedb_search.fake_hiddenurl_db
+                if i['fromid']==fromid
+        ]
+        return db.query(models.hiddenurl).filter(
+            models.hiddenurl.fromid == fromid
+            ).all()
+    
 def get_userresponsecache(db: Session):
     return db.query(models.userResponseCache).all()
 
 @overload
 def get_urls(db: Session, url_ids: List[int]):
-    return [fakedb_search.fake_url_db[i] 
-            for i in fakedb_search.fake_url_db 
-            if i['url_id'] in url_ids
-    ]
-    return db.query(models.url).filter(models.url.url_id.in_(url_ids)).all()
+    ...
 
 @overload
 def get_urls(db: Session):
-    return fakedb_search.fake_url_db
-    return db.query(models.url).all()
+    ...
 
 @overload
 def get_urls(db: Session, type: str):
-    return [fakedb_search.fake_url_db[i] 
-            for i in fakedb_search.fake_url_db 
-            if i['type']==type
-    ]
-    return db.query(models.url).filter(models.url.type == type).all()
+    ...
 
+def get_urls(
+        db: Session,
+        url_ids: Optional[List[int]] = None,
+        type: Optional[str] = None
+):
+    if url_ids:
+        return [fakedb_search.fake_url_db[i] 
+                for i in fakedb_search.fake_url_db 
+                if i['url_id'] in url_ids
+        ]
+        return db.query(models.url).filter(models.url.url_id.in_(url_ids)).all()
+    elif type:
+        return [fakedb_search.fake_url_db[i] 
+                for i in fakedb_search.fake_url_db 
+                if i['type']==type
+        ]
+        return db.query(models.url).filter(models.url.type == type).all()
+    else:
+        return fakedb_search.fake_url_db
+        return db.query(models.url).all()
+    
 def create_user(
         db: Session, 
         user: users.UserInDB
@@ -518,70 +624,83 @@ def update_user(
         db: Session, 
         user: users.UserInDBpw,
 ):
-    if user.username==None:
-        userDB=get_users(db,user.user_id)
-    else:
-        userDB=get_users(db,user.username)
-    userDB.hashed_password=user.hashed_password
-    #db.commit()
-    return {
-        "user":userDB,
-    }
+    ...
 
 @overload
 def update_user(
         db: Session, 
         user: users.UserInDBchar,
 ):
-    if user.username==None:
-        userDB=get_users(db,user.user_id)
-    else:
-        userDB=get_users(db,user.username)
-    userDB.birth=user.birth
-    userDB.gender=user.gender
-    userDB.occupation=user.occupation
-    userDB.mbti=user.mbti
-    #db.commit()
-    return {
-        "user":userDB,
-    }
+    ...
 
 @overload
 def update_user(
         db: Session, 
         user: users.UserInDBtag,
 ):
-    current_tag=get_tags(db,user.user_id)
-    for tag in current_tag:
-        fakedb.fake_interest_tag_db.pop(current_tag['tag_id'])
-    for tag in user.interested_tag:
-        create_interest_tag(db,models.interest_tag(user_id=user.user_id,tag_id=tag))
-    return {
-        "user":get_users(db,user.user_id),
-    }
-    db.execute(f"DELETE FROM interest_tag WHERE user_id={user.user_id}")
-    for tag in user.interested_tag:
-        db.add(models.interest_tag(user_id=user.user_id,tag_id=tag))
-    db.commit()
-    userDB=get_users(db,user.user_id)
-    return {
-        "user":users.UserInDBtag(**vars(userDB)),
-    }
+    ...
 
 @overload
 def update_user(
         db: Session,
         user: users.UserCert,
 ):
-    if user.username==None:
+    ...
+
+def update_user(
+        db: Session,
+        user: Union[users.UserInDBpw,users.UserInDBchar,users.UserInDBtag,users.UserCert]
+):
+    if isinstance(user,users.UserInDBpw):
+        if user.username==None:
+            userDB=get_users(db,user.user_id)
+        else:
+            userDB=get_users(db,user.username)
+        userDB.hashed_password=user.hashed_password
+        #db.commit()
+        return {
+            "user":userDB,
+        }
+    elif isinstance(user,users.UserInDBchar):
+        if user.username==None:
+            userDB=get_users(db,user.user_id)
+        else:
+            userDB=get_users(db,user.username)
+        userDB.birth=user.birth
+        userDB.gender=user.gender
+        userDB.occupation=user.occupation
+        userDB.mbti=user.mbti
+        #db.commit()
+        return {
+            "user":userDB,
+        }
+    elif isinstance(user,users.UserInDBtag):
+        current_tag=get_tags(db,user.user_id)
+        for tag in current_tag:
+            fakedb.fake_interest_tag_db.pop(current_tag['tag_id'])
+        for tag in user.interested_tag:
+            create_interest_tag(db,models.interest_tag(user_id=user.user_id,tag_id=tag))
+        return {
+            "user":get_users(db,user.user_id),
+        }
+        db.execute(f"DELETE FROM interest_tag WHERE user_id={user.user_id}")
+        for tag in user.interested_tag:
+            db.add(models.interest_tag(user_id=user.user_id,tag_id=tag))
+        db.commit()
         userDB=get_users(db,user.user_id)
-    else:
-        userDB=get_users(db,user.username)
-    userDB.certified=user.certified
-    #db.commit()
-    return {
-        "user":userDB,
-    }
+        return {
+            "user":users.UserInDBtag(**vars(userDB)),
+        }
+    elif isinstance(user,users.UserCert):
+        if user.username==None:
+            userDB=get_users(db,user.user_id)
+        else:
+            userDB=get_users(db,user.username)
+        userDB.certified=user.certified
+        #db.commit()
+        return {
+            "user":userDB,
+        }
 
 @overload
 def update_post(
@@ -590,64 +709,7 @@ def update_post(
         user_id: int, 
         feedback: Union[str,None]
 ):
-    post=fakedb.fake_posts_db[post_id]
-    current=[fakedb.fake_feedback_db[i] 
-             for i in fakedb.fake_feedback_db 
-             if i['post_id']==post_id 
-             and i['user_id']==user_id
-    ]
-    if current:
-        currentFeedback=fakedb.fake_feedback_db.pop(current[0])
-        if feedback==None:
-            post[currentFeedback['feedback']]-=1
-        else:
-            currentFeedback['feedback']=feedback
-            fakedb.fake_feedback_db.update(currentFeedback)
-            post[currentFeedback['feedback']]-=1
-            post[feedback]+=1
-        fb=currentFeedback
-    else:
-        fb=fakedb.fake_feedback_db.update({
-            len(fakedb.fake_feedback_db):{
-                "post_id":post_id,
-                "user_id":user_id,
-                "feedback":feedback
-            }
-        })
-        post[feedback]+=1
-    return {
-        "post":post,
-        "feedback":fb,
-    }
-
-
-    update_post_reader(db,posts.Post_v_Readers(user_id=user_id,post_id=post_id,Feedback=feedback))
-    return output
-    post=db.query(models.Post).filter(models.Post.post_id == post_id).first()
-    oldfeedback=get_feedback(db,post_id,user_id)
-    if oldfeedback:
-        post.update({oldfeedback.feedback:post[oldfeedback.feedback]-1,
-                    feedback:post[feedback]+1
-                    })
-        oldfeedback.feedback=feedback
-        db.commit()
-        db.refresh(post)
-        db.refresh(oldfeedback)
-        update_post_reader(db,posts.Post_v_Readers(user_id=user_id,post_id=post_id,Feedback=feedback))
-        return {
-            "post":post,
-            "feedback":oldfeedback,
-        }
-    else:
-        newFB=db.add(models.Feedback(post_id=post_id,user_id=user_id,feedback=feedback))
-        post.update({feedback:post[feedback]+1})
-        update_post_reader(db,posts.Post_v_Readers(user_id=user_id,post_id=post_id,Feedback=feedback))
-        db.commit()
-        db.refresh(post)
-        return {
-            "post":post,
-            "feedback":newFB,
-        }
+    ...
 
 
 @overload
@@ -655,16 +717,85 @@ def update_post(
         db: Session, 
         post: posts.PostInDBfeedback
 ):
-    postDB=get_posts(db,post.post_id)
-    
-    postDB.good=post.good
-    postDB.impossible=post.impossible
-    postDB.tell_me_earlier=post.early
-    #db.commit()
-    return {
-        "post":postDB,
-    }
+    ...
 
+def update_post(
+        db: Session,
+        post: Union[posts.PostInDBfeedback,None]=None,
+        post_id: Optional[int]=None,
+        user_id: Optional[int]=None,
+        feedback: Optional[str]=None
+):
+    if post:
+        postDB=get_posts(db,post.post_id)
+        
+        postDB.good=post.good
+        postDB.impossible=post.impossible
+        postDB.tell_me_earlier=post.early
+        #db.commit()
+        return {
+            "post":postDB,
+        }
+    else:
+        post=fakedb.fake_posts_db[post_id]
+        current=[fakedb.fake_feedback_db[i] 
+                for i in fakedb.fake_feedback_db 
+                if i['post_id']==post_id 
+                and i['user_id']==user_id
+        ]
+        if current:
+            currentFeedback=fakedb.fake_feedback_db.pop(current[0])
+            if feedback==None:
+                post[currentFeedback['feedback']]-=1
+            else:
+                currentFeedback['feedback']=feedback
+                fakedb.fake_feedback_db.update(currentFeedback)
+                post[currentFeedback['feedback']]-=1
+                post[feedback]+=1
+            fb=currentFeedback
+        else:
+            fb=fakedb.fake_feedback_db.update({
+                len(fakedb.fake_feedback_db):{
+                    "post_id":post_id,
+                    "user_id":user_id,
+                    "feedback":feedback
+                }
+            })
+            post[feedback]+=1
+        return {
+            "post":post,
+            "feedback":fb,
+        }
+
+
+        update_post_reader(db,posts.Post_v_Readers(user_id=user_id,post_id=post_id,Feedback=feedback))
+        return output
+        post=db.query(models.Post).filter(models.Post.post_id == post_id).first()
+        oldfeedback=get_feedback(db,post_id,user_id)
+        if oldfeedback:
+            post.update({oldfeedback.feedback:post[oldfeedback.feedback]-1,
+                        feedback:post[feedback]+1
+                        })
+            oldfeedback.feedback=feedback
+            db.commit()
+            db.refresh(post)
+            db.refresh(oldfeedback)
+            update_post_reader(db,posts.Post_v_Readers(user_id=user_id,post_id=post_id,Feedback=feedback))
+            return {
+                "post":post,
+                "feedback":oldfeedback,
+            }
+        else:
+            newFB=db.add(models.Feedback(post_id=post_id,user_id=user_id,feedback=feedback))
+            post.update({feedback:post[feedback]+1})
+            update_post_reader(db,posts.Post_v_Readers(user_id=user_id,post_id=post_id,Feedback=feedback))
+            db.commit()
+            db.refresh(post)
+            return {
+                "post":post,
+                "feedback":newFB,
+            }
+        
 def update_tfidf(
         db: Session, 
         tfidf: posts.Post_v_tfidf
