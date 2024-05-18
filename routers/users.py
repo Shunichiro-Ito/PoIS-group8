@@ -130,7 +130,7 @@ async def certify_submit(certifying_username: str=Body(...),
 async def create_user(user:UserIn):
     if user.username not in fake_users_db:
         create_new_user(fake_users_db,user)
-        return RedirectResponse('/users/login',status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse('/login',status_code=status.HTTP_303_SEE_OTHER)
     else:
         return {'message':'your username is already used.'}
 

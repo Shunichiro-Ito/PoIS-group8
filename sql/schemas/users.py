@@ -75,9 +75,10 @@ class UserInDB1(UserInDBchar,UserInDBpw):
 
 class UserInDB(UserInDBchar,UserInDBpw,UserCert):
     user_id: int
+    displayed_name: str
 
 class UserOut(UserCert):
-    pass
+    displayed_name: str
 
 class Admin(BaseModel):
     username: str

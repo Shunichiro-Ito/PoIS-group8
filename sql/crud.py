@@ -414,8 +414,19 @@ def create_user(
         db: Session, 
         user: users.UserInDB
 ):  
+    user.user_id=len(fakedb.fake_users_db)+1
     fakedb.fake_users_db.update({user.username:user.model_dump()})
-    urlDB=create_url(db,url='/'.join(['users',user.user_id]),id=user.user_id,type='user')
+    url=users.url(
+        url='/'.join(['users',str(user.user_id)]),
+        id=user.user_id,
+        type='user'
+    )
+    urlDB=create_url(
+        db,
+        url=url,
+        id=user.user_id,
+        type='user'
+    )
     return {
         "user":user,
         "url":urlDB
@@ -516,15 +527,16 @@ def create_url(
     fakedb_search.fake_url_db.update(
         {
             url.id:{
-                "url_id":url.id,
+                "url_id":len(fakedb_search.fake_url_db)+1,
                 "url":url.url,
-                "category":type,
+                "category":id,
                 "user_id":id if type=='user' else None,
                 "post_id":id if type=='post' else None
             }
         }
     )
     return fakedb_search.fake_url_db[url.id]
+    
     db_url=models.url(**url.model_dump())
     db.add(db_url)
     db.commit()

@@ -117,11 +117,18 @@ def create_new_user(
 ):
     x=vars(new_user)
     x.update({"hashed_password":get_password_hash(new_user.password)})
-    x.update({"user_id":len(db)+1})
+    x.update({"user_id":0})
     
     new_user_DB=users.UserIn(**x)
-    new_user_DB=users.UserInDB(**new_user_DB.model_dump(),certified=False)
-    return crud.create_user(db,new_user_DB)
+    new_user_DB=users.UserInDB(
+        **new_user_DB.model_dump(),
+        certified=False,
+        hashed_password=get_password_hash(new_user.password),
+        user_id=0,
+    )
+    output=crud.create_user(db,new_user_DB)
+    user,url=output['user'],output['url']
+    return UserOut(**user.model_dump())
 
 def get_posts_by_user(
         db,

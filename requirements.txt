@@ -10,3 +10,4 @@ trio
 fastapi_pagination
 pymysql
 databases
+sshtunnel
