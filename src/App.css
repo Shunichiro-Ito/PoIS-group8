@@ -1,38 +1,193 @@
 .App {
+  width: 100%;
+  height: 100vh;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+
+
+
+.Sidebar {
+  height: 100%;
+  width: 250px;
+  background: #f2f4f7;
+}
+
+.Sidebar-container{
+width:250px;
+
+}
+
+
+.SidebarList {
+  height: auto;
+  padding: 0;
+  width: 100%;
+}
+
+.SidebarList .row {
+  width: 100%;
+  height: 60px;
+  /* background-color: cadetblue; */
+  /* border: 1px solid black; */
+  display: flex;
+  color:#4d5156 ;
+  justify-content: center;
+  align-items: center;
+}
+
+.SidebarList .row:hover {
+  cursor: pointer;
+  background-color:#89cfeb;
+}
+
+.SidebarList #active {
+  background-color: #89cfeb;
+}
+
+.row #icon {
+  flex: 30%;
+  display: grid;
+  place-items: center;
+}
+
+.row #title {
+  flex: 70%;
+}
+
+.SidebarIcon {
+  padding-top: 20px;
+  padding-bottom: 15px;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.SidebarIcon img {
+  width: 100px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.SidebarIcon p {
+  color:#4d5156 ;
+  font-weight: 600;
+  font-size: 13px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.post-box{
+  padding:10px 10px;
+
 }
 
-.App-link {
-  color: #61dafb;
+/* ここからGPT */
+
+body {
+font-family: Arial, sans-serif;
+line-height: 1.6;
+margin: 0;
+padding: 20px;
+background-color: #f4f4f4;
+height:100%;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+input[type="text"], select {
+padding: 10px;
+margin-top: 10px;
+border: 2px solid #ddd;
+width: calc(100% - 24px);
+}
+
+button {
+padding: 10px 20px;
+background-color: #007BFF;
+color: white;
+border: none;
+cursor: pointer;
+transition: background-color 0.3s ease;
+}
+
+button:hover {
+background-color: #0056b3;
+}
+
+div.post {
+background-color: white;
+box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+margin-top: 20px;
+padding: 20px;
+border-radius: 5px;
+}
+
+span.tag {
+display: inline-block;
+background-color: #007BFF;
+color: white;
+padding: 5px 10px;
+margin-right: 5px;
+border-radius: 10px;
+font-size: 0.85em;
+}
+
+select {
+padding: 5px; /* パディングを小さくする */
+font-size: 12px; /* フォントサイズを小さくする */
+border: 1px solid #ccc; /* ボーダーを細くする */
+margin-top: 5px; /* マージンを調整する */
+width: auto; /* 幅を自動調整に変更し、内容に合わせる */
+}
+
+ol{
+float:right;
+
+}
+
+.title{
+float:left;
+margin-right: 10px;
+
+}
+
+/* reset.cssに追加するか、新しいCSSファイルにこのスタイルを追加します */
+.container {
+display: flex;
+flex-direction: column;
+align-items: center; /* 子要素を中央揃えにする */
+width: 100%; /* コンテナの幅を親要素に合わせる */
+}
+
+.input-container {
+width: 30%; /* 入力フィールドの幅を30%に設定 */
+margin: 20px auto; /* 上下に20px、左右自動で中央寄せ */
+display: flex;
+flex-direction: column;
+}
+
+input[type="text"] {
+width: 100%; /* 入力フィールドの幅をコンテナに合わせる */
+padding: 10px;
+border: 1px solid #ccc;
+}
+
+
+
+
+.input-container{
+
+background-color: white; /* 必要に応じて背景色を設定 */
+padding: 10px; /* 必要に応じてパディングを設定 */
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 必要に応じてボックスシャドウを設定 */
+z-index: 1000; 
+}
+
+
+.select-button-container {
+display: flex;
+align-items: center;
+gap: 10px; 
+}
+
+.age-input{
+width:50px
 }

@@ -9,6 +9,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import Cookies from 'js-cookie';
+import Header from "./components/Header";
 
 const PassForget = () => {
   const [name, setName] = useState('');
@@ -23,24 +25,33 @@ const PassForget = () => {
   };
 
 
-  const handleLogin = async(event) => {
+  const handleChangePass = async(event) => {
     event.preventDefault();
     try {
-      const url='http://127.0.0.1:8000/users/'+ name +'/reset_password';
-      const response = await axios.post(url);
-      const { accessToken } = response.data;
+      const access_token = Cookies.get('access_token');
+      const url='http://127.0.0.1:8000/users/reset_password';
+      const response = await axios.post(url, {UserDB: {password: "toEncode"}, UserReset: {new_password: "toEncoder"}}, 
+      {headers:{
+        'Authorization':`bearer ${access_token}`,
+        'Content-Type':'application/json'
+      }});
+      
       // アクセストークンを保存する (CookieやlocalStorage、Redux storeなど)
       // ...
 
       // 認証が必要なページへリダイレクトする
-      window.location.href = '/profile';
+      console.log("Yes")
+      console.log(response.data);
     } catch (error) {
+      console.log("No")
       setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
     }
   };
 
 
   return (
+    <div>
+    <Header />
     <Container maxWidth="xs">
       <Box
         sx={{
@@ -51,16 +62,17 @@ const PassForget = () => {
         }}
       >
         <Typography component="h1" variant="h4">
-          パスワードを忘れた場合
+          パスワードを変更する
         </Typography>
 
-        <Box component="form" onSubmit={handleLogin} noValidate sx={{ mt:1 }}>
+        <Box component="form" onSubmit={handleChangePass} noValidate sx={{ mt:1 }}>
           <TextField
             margin="normal"
             required
             fullWidth
             id="name"
-            label="登録したユーザーネーム"
+            label="元のパスワード"
+            type="password"
             name="name"
             autoComplete="name"
             autoFocus
@@ -93,6 +105,7 @@ const PassForget = () => {
         </Box>
       </Box>
     </Container>
+    </div>
   );
 };
 

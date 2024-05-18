@@ -12,6 +12,8 @@ import {
   Typography,
 } from "@mui/material";
 import { Link as Llink }  from 'react-router-dom' ;
+import Cookies from 'js-cookie';
+import Header from "./components/Header"; // Header コンポーネントのインポートを想定しています。
 
 const Login = () => {
   const [name, setName] = useState('');
@@ -47,6 +49,10 @@ const Login = () => {
       })
       .then((response) => {
         console.log(response.data);
+        const access_token = response.data["access_token"]
+        localStorage.setItem('token', JSON.stringify(access_token));
+        Cookies.set('access_token', access_token, { expires: 7 }); // 7日間有効
+        window.location.href = 'http://localhost:3000/home';
       })
       .catch((error) => {
         console.error(error);
@@ -57,6 +63,9 @@ const Login = () => {
 
 
   return (
+    <div>
+      <Header />
+    
     <Container maxWidth="xs">
       <Box
         sx={{
@@ -115,14 +124,15 @@ const Login = () => {
             </Grid>
 
             <Grid item>
-              <Link href="#" variant="body2">
+              <Llink to ="/createnewaccount">
                 新規登録
-              </Link>
+              </Llink>
             </Grid>
           </Grid>
         </Box>
       </Box>
     </Container>
+    </div>
   );
 };
 

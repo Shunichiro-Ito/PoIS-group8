@@ -1,0 +1,71 @@
+{
+  "posts": [
+    {
+      "id": "1",
+      "content": "contents",
+      "author": "author",
+      "Age": "20",
+      "tags": [
+        "勉強",
+        "試験",
+        "就活"
+      ]
+    },
+    {
+      "id": "3362",
+      "content": "",
+      "author": "author",
+      "Age": "18",
+      "tags": [
+        "勉強",
+        "結婚",
+        "就活",
+        "受験",
+        "結婚"
+      ]
+    },
+    {
+      "id": "b96a",
+      "content": "あいうえお",
+      "author": "author",
+      "Age": "5",
+      "tags": [
+        "試験"
+      ]
+    },
+    {
+      "id": "049c",
+      "content": "faoihefoih",
+      "author": "author",
+      "Age": "18",
+      "tags": []
+    },
+    {
+      "id": "04ea",
+      "content": "faoihefoih",
+      "author": "author",
+      "Age": "18",
+      "tags": [
+        "生活"
+      ]
+    },
+    {
+      "id": "2d73",
+      "content": "faoihefoih",
+      "author": "author",
+      "Age": "18",
+      "tags": [
+        "生活"
+      ]
+    },
+    {
+      "id": "175b",
+      "content": "faoihefoih",
+      "author": "author",
+      "Age": "18",
+      "tags": [
+        "生活"
+      ]
+    }
+  ]
+}
