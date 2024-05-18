@@ -255,7 +255,6 @@ def show_users(db):
 def certify_user(db,
                 username: str,
                 certify: bool):
-    
     user=get_user(db,username)
     if user:
         user_inDB=db.get(user.username)
