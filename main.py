@@ -9,8 +9,9 @@ from fastapi import (
 
 from typing import Annotated
 from models.users import User
-from dependencies import get_current_user,show_tags
+from dependencies import get_current_user,show_tags,verify_admin
 
+from search.searchengine import searcher
 from fakedb import fake_users_db
 
 from routers import posts, users
@@ -35,7 +36,7 @@ async def root(current_user: Annotated[User, Depends(get_current_user)]):
         if not show_tags(fake_users_db,current_user):
             return RedirectResponse("/users/interest_tags")
         else:
-            return {"message":"timeline of posts","detail":current_user}
+            return {"user":current_user,"posts":"timeline of posts",}
     else:
         return RedirectResponse("/login")
 
@@ -60,6 +61,16 @@ app.include_router(posts.router)
 async def login_page():
     return {"message":"login page"}
 
+@app.post('/neural_network/nnscore')
+async def train_neural_network(admin:User=Annotated[User,Depends(verify_admin)]):
+    Search=searcher()
+    return Search.nnscore()
+
+@app.post('/neural_network/train')
+async def train_neural_network(admin:User=Annotated[User,Depends(verify_admin)]):
+    Search=searcher()
+    Search
+    return Search.train()
 
 
 

@@ -1,5 +1,8 @@
 fake_hiddennode_db={
-    1:dict(create_key="就活")
+    1:dict(create_key="就活",
+            layer=0),
+    1:dict(create_key="就活",
+            layer=1),
 }
 
 fake_wordhidden_db={

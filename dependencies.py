@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta, timezone,date
 from typing import Annotated, Union,Literal
-#from sql import crud
+from sql import crud
+from sql.schemas import users,posts
 #from sql.database import SessionLocal
 
-from fakedb import fake_users_db, fake_posts_db, fake_post_user_db, fake_feedback_db
+from sql import crud
 
 from fastapi import Depends,HTTPException, status,Header,Cookie
 from fastapi_pagination import Page, paginate
@@ -43,7 +44,7 @@ def get_password_hash(password):
 
 
 def get_user(db, username: str):
-    user= db[username] #crud.get_users(db, username=username)
+    user= crud.get_users(db, username=username)
     if user:
         return UserInDB(**user)
     else:
@@ -53,12 +54,8 @@ def reset_password(db, username, old_password, new_password
 ):
     user=authenticate_user(db, username,old_password)
     if user:
-        userDB=UserInDBpw(**user)
-        userDB.update({
-            "hashed_password":get_password_hash(new_password)
-        })
-        output=db.update({username:userDB}) #crud.update_user(db,username,userDB)
-        return UserOut(**output['user'])
+        userInDBpw=users.UserInDBpw(**user.model_dump(),hashed_password=get_password_hash(new_password))
+        return crud.update_user(db,userInDBpw)
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -121,10 +118,9 @@ def create_new_user(
     x.update({"hashed_password":get_password_hash(new_user.password)})
     x.update({"user_id":len(db)+1})
     
-    new_user_DB=UserInDB1(**x)
-    new_user_DB=UserInDB(**vars(new_user_DB))
-    db.update({new_user.username:vars(new_user_DB)})
-    return 
+    new_user_DB=users.UserIn(**x)
+    new_user_DB=users.UserInDB(**new_user_DB.model_dump(),certified=False)
+    return crud.create_user(db,new_user_DB)
 
 def get_posts_by_user(
         db,
@@ -134,14 +130,11 @@ def get_posts_by_user(
     user=get_user(fake_users_db,username)
     if user:
         if not currentuser:
-            post_ids=[i for i in post_user_db if post_user_db[i]["user_id"==user.use_id]]
-            posts=[post_db[j] for j in post_ids if post_db[j]["anonymous"]]
+            posts=crud.get_posts(db,user_id=user.user_id,anonymous=False)
         elif currentuser.username==username:
-            post_ids=[post_user_db[i] for i in post_user_db if post_user_db[i]["user_id"==user.use_id]]
-            posts=[post_db[j] for j in post_ids]
+            posts=crud.get_posts(db,user_id=user.user_id,anonymous=True)
         else:
-            post_ids=[post_user_db[i] for i in post_user_db if post_user_db[i]["user_id"==user.use_id]]
-            posts=[post_db[j] for j in post_ids if post_db[j]["anonymous"]]
+            posts=crud.get_posts(db,user_id=user.user_id,anonymous=False)
         
         return {
             "posts":posts
@@ -164,7 +157,7 @@ def get_personal_info(
     if username:
         user=get_user(db,username)
         if user:
-            dictUserInDB=db.get(user.username)
+            dictUserInDB=crud.get_user(db,username)
             return UserInpi(**dictUserInDB)
         else:
             raise login_exception
@@ -173,7 +166,7 @@ def get_personal_info(
 
 def update_personal_info(db,
                          username,
-                         new_info: UserInpi
+                         new_info: users.UserInDBchar
 ):
     login_exception=HTTPException(
         status_code=status.HTTP_303_SEE_OTHER,
@@ -183,9 +176,7 @@ def update_personal_info(db,
     if username:
         user=get_user(db,username)
         if user:
-            dictUserInDB=db.get(user.username)
-            dictUserInDB.update(vars(new_info))
-            person_info=UserInpi(**dictUserInDB)
+            person_info=crud.update_user(db,new_info)
             return person_info
         else:
             raise login_exception
@@ -200,47 +191,31 @@ def update_tags(db,
                 user:UserInDB,
                 new_tag:list):
     dictUserInDB=db.get(user.username)
-    dictUserInDB.update({"interested_tag": new_tag})
-    return dictUserInDB["interested_tag"]
+    UserInDB=users.UserInDBtag(**dictUserInDB)
+    dictUserInDB=crud.update_user(db,UserInDB)
+    return dictUserInDB
 
 def read_user(db,
               username):
     try:
-        user=UserOut(**db.get(username))
-        user.dict(exclude_unset=True)
+        user=UserOut(crud.get_users(db,username=username).model_dump())
         return user
     except AttributeError:
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    
-def get_disclosed_post(postout:PostOut,
-                       db,
-                       post_username):
-    post_user_InDB=UserInDB(**db_user.get(post_username))
-    postout.username=post_username
-    postout.user_displayedname=post_user_InDB.displayed_name
-    return postout
 
-def get_a_post(db_post,
-               db_post_user,
-               db_user,
+def get_a_post(db,
                user:UserInDB,
-               post_id: str):
-    dictpost=db_post.get(post_id)
-    if dictpost:
-        post=PostOut(**dictpost)
-        post.dict(exclude_unset=True)
-        post_user=db_post_user.get(post_id)
-        post_userid=post_user["user_id"]
-        post_username=[i for i in db_user if db_user[i]["user_id"]==post_userid][0]
-        if not post.anonymous:
-            return get_disclosed_post(post,db_user,post_username)
-        elif user and user.username==post_username:
-            return get_disclosed_post(post,db_user,post_username)
-        else:
-            return post
+               post_id: int):
+    
+    if not user:
+        posts=crud.get_posts(db,post_ids=[post_id],anonymous=False)
+    else:
+        posts=crud.get_posts(db,post_ids=[post_id],user_id=user.user_id)
+    
+    return posts
 
 def verify_token(token: str = Header(None), session_token: str = Cookie(None)):
     if token or session_token:
@@ -249,7 +224,7 @@ def verify_token(token: str = Header(None), session_token: str = Cookie(None)):
         return False
     
 def show_users(db):
-    users=[UserInDB(**db[i]) for i in db]
+    users=crud.get_users(db,all=True)
     return users
 
 def certify_user(db,
@@ -257,11 +232,10 @@ def certify_user(db,
                 certify: bool):
     user=get_user(db,username)
     if user:
-        user_inDB=db.get(user.username)
-        user_inDB.update({
-            "certified":certify
-        })
-        return UserOut(**vars(user))
+        newUpdate=users.UserCert(**user.model_dump())
+        newUpdate.certified=certify
+        output=crud.update_user(db,newUpdate)
+        return output
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -271,76 +245,78 @@ def certify_user(db,
 def verify_admin(db,
                 user: UserInDB,
 ):
-        user_db=[i for i in db if db[i]["username"]==user.username]
-        if user_db:
-            return True
-        else:
-            return False
+    creditialException=HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="You are not admin",
+        headers={"Date":datetime.now()},
+    )
+    admin=crud.get_admin(db,user.username)
+    if admin:
+        return UserInDB(**admin)
+    else:
+        raise creditialException
 
 def upload_post_db(
         user: UserInDB,
         new_post: PostIn,
         db
 ):
-    post_id=(len(db)+1)
-    new_post_InDB=PostInDB(
-        **vars(new_post),
-        post_id=post_id,
+    post=posts.PostInDB(
+        **new_post.model_dump(),
+        post_id=0,
         username=user.username,
         post_date=datetime.now(),
     )
-    db.update({
-        post_id:vars(new_post_InDB)
-    })
-
-    db_post_user.update({
-        post_id:dict(
-        post_id=post_id,
-        user_id=user.user_id,
-        tfidf=[0,0,0,0,0,0]
+    tfidf=posts.Post_v_tfidfnoId(
+        zip(
+            ['_'.join(['tfidf',i]) for i in range(0,20)],
+            [1/19]*20)
+        )
+    userDetail=get_user(db,user.username)
+    writers_dynamic=posts.Post_v_Writers_dinamicdatanoId(
+        **userDetail.model_dump(),
+        **post.model_dump()
     )
-    })
-    return post_id
+    output=crud.create_post(
+        db,
+        post=post,
+        writers_dynamic=writers_dynamic,
+        tfidf=tfidf,
+    )
+    return output
 
 def updateFeedback(current_user: UserInDB,
                    post_id: int,
                    feedback: str,
                    db
 ):
-    feedback_ids=[k for k in db_feedback if db_feedback[k]["post_id"]==post_id 
-                  and db_feedback[k]["user_id"]==current_user.user_id]
-    if feedback_ids:
-        feedback_id=feedback_ids[0]
-        old_feedback=db_feedback[feedback_id]["feedback"]
-        if old_feedback==feedback:
-            db_feedback.pop(feedback_id)
-            db_post[post_id].update({feedback:db_post[post_id][feedback]-1})
-        else:
-            db_post[post_id].update({old_feedback:db_post[post_id][old_feedback]-1})
-            db_feedback[feedback_id].update({"feedback":feedback})
-            db_post[post_id].update({feedback:db_post[post_id][feedback]+1})
+    current=crud.get_feedback(db,user_id=current_user.user_id,post_id=post_id)
+    if current and current.feedback==feedback:
+        pt,fb=crud.update_post(
+            db,
+            post_id=post_id,
+            feedback=None,
+            user_id=current_user.user_id
+        )
     else:
-        db_feedback.update({
-            len(db_feedback)+1:dict(
-                post_id=post_id,
-                user_id=current_user.user_id,
-                feedback=feedback
-            )
-        })
-        original_num=db_post[post_id][feedback]
-        db_post[post_id].update({feedback:(original_num+1)})
-    post=PostOut(**db_post[post_id])
-    post.dict(exclude_unset=True)
-    return post
+        pt,fb=crud.update_post(
+            db,
+            post_id=post_id,
+            feedback=feedback,
+            user_id=current_user.user_id
+        )
+
+    return posts.PostOut(**pt),
 
 def updatesession(db,
                   session: str,
                   api_key: str,
                   action: Literal["search","click","good","early","impossible"]="search",
                   key_words: str=""):
-    if action=="search":
-        pass
-    elif action=="click":
-        pass
-    else:
-        pass
+    return crud.create_userresponsecache(
+            db,
+            session=session,
+            api_key=api_key,
+            action=action,
+            key_words=key_words
+        )

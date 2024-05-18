@@ -51,6 +51,45 @@ fake_users_db = {
     ),
 }
 
+fake_interest_tag_db={
+    1:dict(
+        user_id=1,
+        tag_id=1
+    ),
+    2:dict(
+        user_id=1,
+        tag_id=2
+    ),
+    3:dict(
+        user_id=1,
+        tag_id=6
+    ),
+    4:dict(
+        user_id=1,
+        tag_id=7
+    ),
+    5:dict(
+        user_id=2,
+        tag_id=5
+    ),
+    6:dict(
+        user_id=2,
+        tag_id=4
+    ),
+    7:dict(
+        user_id=3,
+        tag_id=1
+    ),
+    8:dict(
+        user_id=3,
+        tag_id=2
+    ),
+    9:dict(
+        user_id=3,
+        tag_id=3
+    ),
+}
+
 fake_posts_db={
     1:dict(
         post_id=1,
@@ -82,12 +121,10 @@ fake_post_user_db={
     1:dict(
         post_id=1,
         user_id=0,
-        tfidf=[0,1,0.9,0.2,0.5]
     ),
     2:dict(
         post_id=2,
         user_id=3,
-        tfidf=[0,1,0.9,0.2,0.5]
     )
 }
 
@@ -97,7 +134,7 @@ fake_admin_db={
     )
 }
 
-fake_tag_db={
+fake_category_db={
     1:dict(
         tag_id=1,
         tag_name="生活"

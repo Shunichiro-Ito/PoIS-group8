@@ -24,8 +24,7 @@ class Post(BaseModel):
     class Config:
         orm_mode = True
 
-class Post_v_tfidf(BaseModel):
-    post_id: int
+class Post_v_tfidfnoId(BaseModel):
     tfidf_0: float
     tfidf_1: float
     tfidf_2: float
@@ -47,23 +46,35 @@ class Post_v_tfidf(BaseModel):
     tfidf_18: float
     tfidf_19: float
 
-class Post_v_Writers_initialdata(BaseModel):
+class Post_v_tfidf(Post_v_tfidfnoId):
+    post_id: int
+
+class Post_v_Writers_initialdatanoId(BaseModel):
+    user_id: int
+    category_id: int
+
+class Post_v_Writers_initialdata(Post_v_Writers_initialdatanoId):
     user_id: int
     post_id: int
     category_id: int
 
-class Post_v_Writers_dinamicdata(BaseModel):
+class Post_v_Writers_dinamicdatanoId(BaseModel):
     user_id: int
-    post_id: int
     category_id: int
     age: int
     gender: gender
     occupation: str
     mbti: str
 
-class Post_v_Readers(BaseModel):
-    user_id: int
+class Post_v_Writers_dinamicdata(Post_v_Writers_dinamicdatanoId):
     post_id: int
+
+class Post_v_ReadersnoId(BaseModel):
+    user_id: int
+    feedback: Feedback
+
+class Post_v_Readers(Post_v_ReadersnoId):
+    user_id: int
     feedback: Feedback
 
 class url(BaseModel):

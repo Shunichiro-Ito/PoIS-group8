@@ -80,7 +80,7 @@ async def personal_info(
 
 @router.post("/update_personal_info/submit",response_model=UserInpi)
 async def submit_personal_info(
-    current_user: Annotated[User, Security(get_current_user)],
+    current_user: Annotated[User, Depends(get_current_user)],
     UserUpdate: UserInpi,
 ):
     if current_user:
