@@ -1,4 +1,4 @@
-from typing import List,Union
+from typing import List,Union,Optional
 from sqlalchemy.orm import Session
 
 import models
@@ -58,6 +58,30 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 def get_users(db: Session, all=True):
     return fakedb.fake_users_db
     return db.query(models.User).all()
+def get_users(
+        db: Session, 
+        user_id: Union[int, List[int], None] = None,
+        username: Optional[str] = None,
+        skip: int = 0,
+        limit: int = 100
+):
+
+    # If 'username' is provided, return the user matching that username
+    if username:
+        return fakedb.fake_users_db.get(username)
+        return db.query(models.User).filter(models.User.username == username).first()
+        
+    # If 'user_id' is provided and it's a list, return users matching those IDs
+    if isinstance(user_id, list):
+        return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db if i['user_id'] in user_id] if db is None else db.query(models.User).filter(models.User.user_id.in_(user_id)).all()
+
+    # If 'user_id' is provided and it's a single ID, return the user matching that ID
+    if isinstance(user_id, int):
+        return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db if i['user_id'] == user_id][0] if db is None else db.query(models.User).filter(models.User.user_id == user_id).first()
+
+
+    # Default case: return users with pagination
+    return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db][skip:skip+limit] if db is None else db.query(models.User).offset(skip).limit(limit).all()
 
 def get_admin(db: Session, admin_id: int):
     admin=get_users(db,admin_id)
