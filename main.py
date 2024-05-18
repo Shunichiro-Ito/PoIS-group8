@@ -1,6 +1,7 @@
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
+from models.users import Token
 
 from fastapi import (
     Depends,
@@ -14,7 +15,7 @@ cookie_scheme = APIKeyQuery(name="session")
 
 from typing import Annotated,Literal
 from models.users import User
-from dependencies import get_current_user,show_tags,verify_admin
+from dependencies import get_current_user,show_tags,verify_admin,oauth2_scheme
 
 from search.searchengine import searcher
 from fakedb import fake_users_db
@@ -32,16 +33,16 @@ app=FastAPI(
 
 add_pagination(app)
 
-
 # Not ready
 @app.get("/",tags=["home"])
-async def root():
-    current_user=User(get_current_user())
-    if current_user:
-        if not show_tags(fake_users_db,current_user):
-            return RedirectResponse("/users/interest_tags")
-        else:
-            return {"user":current_user,"posts":"timeline of posts",}
+async def root(token: Annotated[Token, Depends(oauth2_scheme)]):
+    if token:
+        current_user=User(get_current_user(token))
+        if current_user:
+            if not show_tags(fake_users_db,current_user):
+                return RedirectResponse("/users/interest_tags")
+            else:
+                return {"user":current_user,"posts":"timeline of posts",}
     else:
         return RedirectResponse("/login")
 

@@ -160,7 +160,7 @@ def get_posts(
                 or_(models.Post.user_id == user_id, models.Post.anonymous==False)
             ).all()
     elif post_ids:
-        return [fakedb.fake_posts_db[i] for i in fakedb.fake_posts_db if i['post_id'] in post_ids]
+        return [fakedb.fake_posts_db[i] for i in fakedb.fake_posts_db if fakedb.fake_posts_db[i]['post_id'] in post_ids]
         return db.query(models.Post).filter(
                 models.Post.post_id.in_(post_ids),models.Post.anonymous==anonymousIncluded
             ).all()

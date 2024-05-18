@@ -15,7 +15,7 @@ from fakedb import fake_users_db
 
 from models.users import (
     UserInDB1,UserInDB,TokenData,UserIn,UserOut,UserInpi,UserInDBtag,
-    UserInDBpw
+    UserInDBpw,Token
     )
 from models.posts import PostIn,PostInDB,PostOut
 
@@ -82,7 +82,7 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
 
     return encoded_jwt
 
-async def get_current_user(token: Annotated[TokenData, Depends(oauth2_scheme)]):
+async def get_current_user(token: Annotated[Token, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
