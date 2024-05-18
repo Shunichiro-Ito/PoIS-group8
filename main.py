@@ -37,7 +37,7 @@ add_pagination(app)
 @app.get("/",tags=["home"])
 async def root(token: Annotated[Token, Depends(oauth2_scheme)]):
     if token:
-        current_user=User(get_current_user(token))
+        current_user=User(get_current_user())
         if current_user:
             if not show_tags(fake_users_db,current_user):
                 return RedirectResponse("/users/interest_tags")
@@ -75,7 +75,6 @@ async def train_neural_network(admin:User=Annotated[User,Depends(verify_admin)])
 @app.post('/neural_network/train')
 async def train_neural_network(admin:User=Annotated[User,Depends(verify_admin)]):
     Search=searcher()
-    
     return Search.train()
 
 @app.get('/search/{key_words}')

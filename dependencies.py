@@ -54,8 +54,9 @@ def reset_password(db, username, old_password, new_password
 ):
     user=authenticate_user(db, username,old_password)
     if user:
-        userInDBpw=users.UserInDBpw(**user.model_dump(),hashed_password=get_password_hash(new_password))
-        return crud.update_user(db,userInDBpw)
+        user.hashed_password=get_password_hash(new_password)
+        userInDBpw=users.UserInDBpw(**user.model_dump())
+        return crud.update_user(db,userInDBpw)['user']
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

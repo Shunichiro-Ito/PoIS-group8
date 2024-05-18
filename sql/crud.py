@@ -653,10 +653,11 @@ def update_user(
 ):
     if isinstance(user,users.UserInDBpw):
         if user.username==None:
-            userDB=get_users(db,user.user_id)
+            userDB=get_users(db,user.user_id)[0]
         else:
-            userDB=get_users(db,user.username)
-        userDB.hashed_password=user.hashed_password
+            userDB=get_users(db,user.username)[0]
+        userDB['hashed_password']=user.hashed_password
+        #userDB.hashed_password=user.hashed_password
         #db.commit()
         return {
             "user":userDB,

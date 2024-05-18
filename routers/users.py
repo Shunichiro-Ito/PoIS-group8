@@ -11,6 +11,7 @@ from fastapi_pagination.cursor import CursorPage
 #from sqlalchemy.orm import Session
 #from sql.database import SessionLocal
 #from sql import crud
+
 from fakedb import fake_users_db,fake_post_user_db,fake_posts_db,fake_admin_db
 
 from models.users import Token,User,UserIn,UserResetPW,UserInpw,UserOut,UserInpi,UserIntag,UserInDB
@@ -62,7 +63,7 @@ async def reset_password_post(
     UserReset: UserResetPW,
 ):
     user=reset_password(fake_users_db,current_user.username,UserDB.password,UserReset.new_password)
-    return user
+    return UserOut(**user)
 
 @router.get("/update_personal_info",response_model=UserInpi)
 async def personal_info(
@@ -124,13 +125,6 @@ async def certify_submit(certifying_username: str=Body(...),
             headers={"Date":datetime.now(),
                      "WWW-Authenticate": "Bearer"},
         )
-
-@router.get("/register")
-async def register_page(current_user: User=Depends(get_current_user)):
-    if not current_user:
-        return {"message":"register page"}
-    else:
-        return RedirectResponse("/",status_code=status.HTTP_303_SEE_OTHER)
 
 @router.post("/register")
 async def create_user(user:UserIn):
