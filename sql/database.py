@@ -26,7 +26,7 @@ class SQLSession:
             ssh_forwarder.start()
 
             engine = create_engine(
-                f'mysql+pymysql://user1:PoIS-group8@localhost:{ssh_forwarder.local_bind_port}', 
+                f'mysql+pymysql://user1:PoIS-group8@{ssh_forwarder.local_bind_address}:{ssh_forwarder.local_bind_port}', 
                 echo=False, 
                 pool_recycle=10
             )

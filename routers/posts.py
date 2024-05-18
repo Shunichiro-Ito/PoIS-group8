@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends,HTTPException,status,Header,Response,Request,Form
 from fastapi.responses import RedirectResponse
 from fastapi.security import APIKeyQuery,APIKeyCookie
-from typing import Literal, Annotated
+from typing import Literal, Annotated,Union
 from search.searchengine import searcher
 from dependencies import (
     oauth2_scheme,
@@ -33,8 +33,9 @@ from fastapi_pagination.customization import (
 #from sql.database import SessionLocal
 #from sql import crud
 from fakedb import fake_posts_db,fake_post_user_db,fake_users_db,fake_feedback_db
-from models.users import User
+from models.users import User,Token
 from models.posts import PostIn, Feedback
+from sql.database import SQLSession
 
 
 router = APIRouter(
@@ -45,6 +46,8 @@ router = APIRouter(
 
 query_scheme=APIKeyQuery(name="searchresponse")
 cookie_scheme=APIKeyCookie(name="session")
+
+db=SQLSession()
 
 @router.post("/click_post")
 async def click_post(post_id:int,
@@ -81,7 +84,6 @@ async def feedback(current_user: Annotated[User,Depends(get_current_user)],
                    feedback: Feedback=Form(...),
                    session:str=Depends(cookie_scheme),
                    api_key:str=Depends(query_scheme),
-                   #db: Session = Depends(get_db)
 ):
     if current_user:
         db=fake_feedback_db
@@ -94,14 +96,6 @@ async def feedback(current_user: Annotated[User,Depends(get_current_user)],
             detail="You can only login to perform this action",
             headers={"WWW-Authenticate": "Bearer"},
             )
-    
-@router.get("/{post_id}")
-async def read_post(post_id: int,
-                    current_user: Annotated[User,Depends(get_current_user)],
-                    #db: Session = Depends(get_db)
-):
-    db=fake_posts_db
-    return get_a_post(db,current_user,post_id)
 
 @router.get("/search/{key_words}")
 async def search_posts(key_words: str,
@@ -123,3 +117,31 @@ async def search_posts(key_words: str,
         "api_key":api_key,
         "session":session,
     }
+
+@router.get("/post_id/{post_id}")
+async def read_a_post(
+    token: Annotated[Token, Depends(oauth2_scheme)],
+    post_id:  int,
+):
+    if token:
+        current_user = await get_current_user(token)
+    else:
+        current_user=None
+    return get_a_post(db,
+                        current_user,
+                        post_id)[0]
+
+# not ready
+# https://uriyyo-fastapi-pagination.netlify.app/tutorials/cursor-pagination/
+@router.get("/{username_or_post_id}")
+async def read_own_posts(
+    token: Annotated[Token, Depends(oauth2_scheme)],
+    username: str,
+)->Page[dict]:
+    if token:
+        current_user = await get_current_user(token)
+    else:
+        current_user=None
+    return paginate(get_posts_by_user(db,
+                            current_user,
+                            username))

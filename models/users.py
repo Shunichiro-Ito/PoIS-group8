@@ -65,3 +65,6 @@ class UserOut(UserCert):
 class Admin(BaseModel):
     username: str
 
+class Session(BaseModel):
+    session_token: str
+    query_token: str

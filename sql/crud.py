@@ -47,28 +47,23 @@ def get_feedback(db: Session,post_id: Union[int,None],user_id: Union[int,None]):
 
 @overload
 def get_users(db: Session, user_id: int):
-    return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db if i['user_id']==user_id][0]
-    return db.query(models.User).filter(models.User.user_id == user_id).first()
+    ...
 
 @overload
 def get_users(db: Session, username: str):
-    return fakedb.fake_users_db.get(username)
-    return db.query(models.User).filter(models.User.username == username).first()
+    ...
 
 @overload
 def get_users(db: Session, user_ids: List[int]):
-    return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db if i['user_id'] in user_ids]
-    return db.query(models.User).filter(models.User.user_id.in_(user_ids)).all()
+    ...
 
 @overload
 def get_users(db: Session, skip: int = 0, limit: int = 100):
-    return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db][skip:skip+limit]
-    return db.query(models.User).offset(skip).limit(limit).all()
+    ...
 
 @overload
 def get_users(db: Session, all=True):
-    return fakedb.fake_users_db
-    return db.query(models.User).all()
+    ...
 
 def get_users(
         db: Session, 
@@ -86,7 +81,7 @@ def get_users(
         return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db if i['user_id'] in user_id]
         return db.query(models.User).filter(models.User.user_id.in_(user_ids)).all()
     elif username:
-        return fakedb.fake_users_db.get(username)
+        return fakedb.fake_users_db[username]
         return db.query(models.User).filter(models.User.username == username).first()
     elif all:
         return fakedb.fake_users_db
@@ -95,10 +90,21 @@ def get_users(
         return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db][skip:skip+limit]
         return db.query(models.User).offset(skip).limit(limit).all()
 
-def get_admin(db: Session, admin_id: int):
-    admin=get_users(db,admin_id)
-    return fakedb.fake_users_db.get(admin['username'])
-    return db.query(models.Admin).filter(models.Admin.user_id == admin_id).first()
+def get_admin(db: Session, username: str):
+    admin=[i 
+           for i in fakedb.fake_admin_db 
+           if fakedb.fake_admin_db[i]['username']==username]
+    if admin:
+        admin=get_users(db,username=username)
+        return admin
+    else:
+        return None
+    admin = db.query(models.Admin).filter(models.Admin.username == username).first()
+    if admin:
+        admin=get_users(db,username=username)
+        return admin
+    else:
+        return None
 
 @overload
 def get_tags(db: Session, user_id: int):
@@ -536,7 +542,7 @@ def create_url(
         }
     )
     return fakedb_search.fake_url_db[url.id]
-    
+
     db_url=models.url(**url.model_dump())
     db.add(db_url)
     db.commit()
@@ -665,9 +671,9 @@ def update_user(
 ):
     if isinstance(user,users.UserInDBpw):
         if user.username==None:
-            userDB=get_users(db,user.user_id)[0]
+            userDB=get_users(db,user_id=user.user_id)
         else:
-            userDB=get_users(db,user.username)[0]
+            userDB=get_users(db,username=user.username)
         userDB['hashed_password']=user.hashed_password
         #userDB.hashed_password=user.hashed_password
         #db.commit()
@@ -676,9 +682,9 @@ def update_user(
         }
     elif isinstance(user,users.UserInDBchar):
         if user.username==None:
-            userDB=get_users(db,user.user_id)
+            userDB=get_users(db,user_id=user.user_id)
         else:
-            userDB=get_users(db,user.username)
+            userDB=get_users(db,username=user.username)
         userDB.birth=user.birth
         userDB.gender=user.gender
         userDB.occupation=user.occupation
@@ -706,9 +712,9 @@ def update_user(
         }
     elif isinstance(user,users.UserCert):
         if user.username==None:
-            userDB=get_users(db,user.user_id)
+            userDB=get_users(db,user_id=user.user_id)
         else:
-            userDB=get_users(db,user.username)
+            userDB=get_users(db,username=user.username)
         userDB.certified=user.certified
         #db.commit()
         return {

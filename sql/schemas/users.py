@@ -83,3 +83,8 @@ class UserOut(UserCert):
 class Admin(BaseModel):
     username: str
 
+class UserResponseCache(BaseModel):
+    sessionvalue: str
+    querys: str
+    selectedurl: str
+    action: str

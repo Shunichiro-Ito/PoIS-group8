@@ -18,6 +18,7 @@ from models.users import (
     UserInDBpw,Token
     )
 from models.posts import PostIn,PostInDB,PostOut
+from fastapi.security import APIKeyCookie, APIKeyQuery
 
 # to get a string like this run:
 # openssl rand -hex 32
@@ -28,6 +29,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/token",auto_error=False,)
+session_scheme = APIKeyCookie(name="session")
+query_scheme = APIKeyQuery(name="searchresponse")
 
 def get_db():
     db = None #SessionLocal()
@@ -44,10 +47,13 @@ def get_password_hash(password):
 
 
 def get_user(db, username: str):
-    user= crud.get_users(db, username=username)
-    if user:
-        return UserInDB(**user)
-    else:
+    try:
+        user= crud.get_users(db, username=username)
+        if user:
+            return UserInDB(**user)
+        else:
+            return None
+    except:
         return None
 
 def reset_password(db, username, old_password, new_password
@@ -56,7 +62,9 @@ def reset_password(db, username, old_password, new_password
     if user:
         user.hashed_password=get_password_hash(new_password)
         userInDBpw=users.UserInDBpw(**user.model_dump())
-        return crud.update_user(db,userInDBpw)['user']
+        output=crud.update_user(db,userInDBpw)['user']
+        return UserOut(**output)
+        return UserOut(**output.model_dump())
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -138,15 +146,13 @@ def get_posts_by_user(
     user=get_user(fake_users_db,username)
     if user:
         if not currentuser:
-            posts=crud.get_posts(db,user_id=user.user_id,anonymous=False)
+            posts=crud.get_posts(db,user_id=user.user_id,anonymousIncluded=False)
         elif currentuser.username==username:
-            posts=crud.get_posts(db,user_id=user.user_id,anonymous=True)
+            posts=crud.get_posts(db,user_id=user.user_id,anonymousIncluded=True)
         else:
-            posts=crud.get_posts(db,user_id=user.user_id,anonymous=False)
+            posts=crud.get_posts(db,user_id=user.user_id,anonymousIncluded=False)
         
-        return {
-            "posts":posts
-    }
+        return posts
     else:
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
@@ -165,7 +171,7 @@ def get_personal_info(
     if username:
         user=get_user(db,username)
         if user:
-            dictUserInDB=crud.get_user(db,username)
+            dictUserInDB=crud.get_users(db,username=username)
             return UserInpi(**dictUserInDB)
         else:
             raise login_exception
@@ -192,38 +198,63 @@ def update_personal_info(db,
         raise login_exception
     
 def show_tags(db,user:UserInDB):
-    user_tag=UserInDBtag(**db.get(user.username))
+    userDB=crud.get_users(db,username=user.username)
+    user_tag=users.UserInDBtag(**userDB)
+    #user_tag=UserInDBtag(**userDB.model_dump())
     return user_tag.interested_tag
     
 def update_tags(db,
                 user:UserInDB,
                 new_tag:list):
-    dictUserInDB=db.get(user.username)
-    UserInDB=users.UserInDBtag(**dictUserInDB)
-    dictUserInDB=crud.update_user(db,UserInDB)
-    return dictUserInDB
+    userDB=crud.get_users(db,username=user.username)
+    userDB.update({"interested_tag":new_tag})
+    UserInDB=users.UserInDBtag(**userDB.model_dump())
+    UserUpdated=crud.update_user(db,UserInDB)
+    return UserUpdated
 
 def read_user(db,
-              username):
+              username,
+              current_user: Union[UserInDB,None]=None,
+):
+    NotExistException=HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="User not found",
+    )
     try:
-        user=UserOut(crud.get_users(db,username=username).model_dump())
-        return user
+        user=crud.get_users(db,username=username)
+        if user:
+            if current_user:
+                if current_user.username==username:
+                    user=UserInDB(**user)
+                    #user=UserInDB(**user.model_dump())
+                else:
+                    user=UserOut(**user)
+                    #user=UserOut(**user.model_dump())
+            else:
+                user=UserOut(**user)
+                #user=UserOut(**user.model_dump())
+       
+            return user
+        else:
+            raise NotExistException
     except AttributeError:
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
+        raise NotExistException
 
 def get_a_post(db,
                user:UserInDB,
                post_id: int):
     
     if not user:
-        posts=crud.get_posts(db,post_ids=[post_id],anonymous=False)
+        posts=crud.get_posts(db,post_ids=[post_id],anonymousIncluded=False)
     else:
         posts=crud.get_posts(db,post_ids=[post_id],user_id=user.user_id)
-    
-    return posts
+    if len(posts)==0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Post not found",
+        )
+    else:
+        return posts
 
 def verify_token(token: str = Header(None), session_token: str = Cookie(None)):
     if token or session_token:
@@ -315,6 +346,19 @@ def updateFeedback(current_user: UserInDB,
         )
 
     return posts.PostOut(**pt),
+
+def create_session_token(db,
+                     ):
+     sessionvalue=session_scheme()
+     return crud.create_userresponsecache(
+         db,
+         userResponseCache=users.UserResponseCache(
+                sessionvalue=sessionvalue,
+                querys=querys,
+                selectedurl=selectedurl,
+                action="search"
+            )
+     )
 
 def updatesession(db,
                   session: str,

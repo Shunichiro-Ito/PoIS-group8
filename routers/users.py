@@ -26,17 +26,21 @@ from dependencies import (authenticate_user,
                           show_tags,
                           update_tags,
                           read_user,
+                          oauth2_scheme,
                           get_posts_by_user,
                           verify_admin,
                           show_users,
                           certify_user)
+
+from sql.database import SQLSession
 
 router = APIRouter(
     prefix="/users",
     tags=["Users"],
     dependencies=[]
     )
-    
+
+db=SQLSession()
 
 @router.post("/token",response_model=Token)
 async def login_for_access_token(
@@ -63,7 +67,7 @@ async def reset_password_post(
     UserReset: UserResetPW,
 ):
     user=reset_password(fake_users_db,current_user.username,UserDB.password,UserReset.new_password)
-    return UserOut(**user)
+    return UserOut(**user.model_dump())
 
 @router.get("/update_personal_info",response_model=UserInpi)
 async def personal_info(
@@ -97,7 +101,7 @@ async def submit_personal_info(
 @router.get("/")
 async def users_page(current_user: User=Depends(get_current_user))->Page[UserInDB]:
     if current_user:
-        if verify_admin(fake_admin_db,current_user):
+        if verify_admin(db,current_user):
             return paginate(show_users(fake_users_db))
         else:
             raise HTTPException(status.HTTP_404_NOT_FOUND,
@@ -152,23 +156,11 @@ async def get_me(current_user: User = Depends(get_current_user)):
         return RedirectResponse("/users/login")
 
 @router.get("/{username}")
-async def get_user_page(username: str):
-    return read_user(fake_users_db,username)
+async def get_user_page(username: str,
+                        token:Annotated[Token, Depends(oauth2_scheme)]):
+    if token:
+        current_user = await get_current_user(token)
+        return read_user(db,username,current_user)
+    else:
+        return read_user(db,username)
 
-@router.get("/{current_user.username}/", response_model=User)
-async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_user)],
-):
-    return current_user
-
-# not ready
-# https://uriyyo-fastapi-pagination.netlify.app/tutorials/cursor-pagination/
-@router.get("/{username}/posts",tags=["Posts"])
-async def read_own_posts(
-    current_user: Annotated[User, Depends(get_current_user)],
-    username: str
-)->Page[dict]:
-    return paginate(get_posts_by_user(fake_posts_db,
-                             fake_post_user_db,
-                             current_user,
-                             username))
