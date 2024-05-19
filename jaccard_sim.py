@@ -103,7 +103,7 @@ def main(current_user):
             for k in range(#all text as dict)):
                 candidate_text = {}
                 if k[tag] == i and k[kmeans] == key:
-                    candidate_text.update({'k[title]', key)
+                    candidate_text.update({'k[title]': key})
                 # 暂时无随机
                 # if candidate_text != []:
                 #     random_candidate_text = random.choice(candidate_text.items())
