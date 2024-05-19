@@ -119,5 +119,5 @@ def main(current_user):
     
 
 
-if __name__ == "__main__":
-    main()
+#if __name__ == "__main__":
+#    main()
