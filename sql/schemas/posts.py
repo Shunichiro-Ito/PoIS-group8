@@ -18,7 +18,7 @@ class Post(BaseModel):
     content: str
     age: int
     post_date: datetime
-    tag_id: int
+    tag_id: list
     anonymous: bool
 
     class Config:

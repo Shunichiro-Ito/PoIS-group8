@@ -32,15 +32,12 @@ from dependencies import (authenticate_user,
                           show_users,
                           certify_user)
 
-from sql.database import SQLSession
-
 router = APIRouter(
     prefix="/users",
     tags=["Users"],
     dependencies=[]
     )
-
-db=SQLSession()
+from dependencies import db
 
 @router.post("/token",response_model=Token)
 async def login_for_access_token(
@@ -89,7 +86,7 @@ async def submit_personal_info(
     UserUpdate: UserInpi,
 ):
     if current_user:
-        user=update_personal_info(fake_users_db,current_user.username,UserUpdate)
+        user=update_personal_info(db,current_user.username,UserUpdate)
         output=UserInpi(**user)
         #output=UserInpi(**user.model_dump())
         return output

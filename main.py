@@ -15,6 +15,8 @@ cookie_scheme = APIKeyQuery(name="session")
 
 from typing import Annotated,Literal
 from models.users import User,Session
+from sql.database import SQLSession
+
 from dependencies import get_current_user,show_tags,verify_admin,oauth2_scheme,create_session_token
 
 from search.searchengine import searcher
@@ -32,6 +34,7 @@ app=FastAPI(
     version="0.0.1",
     
 )
+from dependencies import db
 
 add_pagination(app)
 
@@ -95,7 +98,9 @@ async def create_session(
     key_words: str,
     current_user: Annotated[User,Depends(get_current_user)],
     ):
-    session_token,query_token=create_session_token()
+    session_token,query_token=create_session_token(
+        db
+    )
     RedirectResponse(f"/search/{key_words}")
     return Session(
         session_token=session_token,

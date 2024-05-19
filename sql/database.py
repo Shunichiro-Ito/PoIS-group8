@@ -8,14 +8,14 @@ SSH_PKEY = '~/.ssh/Group08.Admin.pem'
 
 # SSHトンネル接続情報の設定
 ssh_forwarder = sshtun.SSHTunnelForwarder(
-    ssh_address_or_host='ec2-3-84-162-249.compute-1.amazonaws.com',
+    ssh_address_or_host='ec2-54-196-139-143.compute-1.amazonaws.com',
     ssh_username='ec2-user',
     ssh_password='Shakai.Group08',
-    remote_bind_address=('ip-172-31-93-14.ec2.internal', 3306),
+    remote_bind_address=('ip-172-31-21-16.ec2.internal', 3306),
     ssh_pkey=SSH_PKEY,
     
 )
-
+db_name = 'group8_db'
 
 #create session
 class SQLSession:
@@ -26,7 +26,7 @@ class SQLSession:
             ssh_forwarder.start()
 
             engine = create_engine(
-                f'mysql+pymysql://user1:PoIS-group8@{ssh_forwarder.local_bind_address}:{ssh_forwarder.local_bind_port}', 
+                f'mysql+pymysql://user1:PoIS-group8@{ssh_forwarder.local_bind_address}:{ssh_forwarder.local_bind_port}',#/{db_name}?charset=utf8', 
                 echo=False, 
                 pool_recycle=10
             )

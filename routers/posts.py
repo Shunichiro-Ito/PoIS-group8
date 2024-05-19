@@ -12,7 +12,6 @@ from dependencies import (
     upload_post_db,
     updateFeedback,
     updatesession,
-    get_db
 )
 
 from fastapi_pagination import LimitOffsetPage, paginate
@@ -35,7 +34,7 @@ from fastapi_pagination.customization import (
 from fakedb import fake_posts_db,fake_post_user_db,fake_users_db,fake_feedback_db
 from models.users import User,Token
 from models.posts import PostIn, Feedback
-from sql.database import SQLSession
+from dependencies import db
 
 
 router = APIRouter(
@@ -46,8 +45,6 @@ router = APIRouter(
 
 query_scheme=APIKeyQuery(name="searchresponse")
 cookie_scheme=APIKeyCookie(name="session")
-
-db=SQLSession()
 
 @router.post("/click_post")
 async def click_post(post_id:int,
@@ -61,9 +58,7 @@ async def click_post(post_id:int,
 async def submit_post(
     current_user: Annotated[User, Depends(get_current_user)],
     new_post: PostIn,
-    #db: Session = Depends(get_db)
 ):
-    db=fake_posts_db
     if current_user:
         post_id=upload_post_db(current_user,new_post,db=db)
         return RedirectResponse(f"/posts/{post_id}",status_code=status.HTTP_303_SEE_OTHER)
@@ -86,9 +81,8 @@ async def feedback(current_user: Annotated[User,Depends(get_current_user)],
                    api_key:str=Depends(query_scheme),
 ):
     if current_user:
-        db=fake_feedback_db
         str_feedback=feedback.value
-        updatesession(session,api_key,action=feedback)
+        updatesession(db,session,api_key,action=feedback)
         return updateFeedback(current_user,post_id,str_feedback,db=db)
     else:
         raise HTTPException(

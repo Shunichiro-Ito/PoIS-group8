@@ -31,13 +31,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/token",auto_error=False,)
 session_scheme = APIKeyCookie(name="session")
 query_scheme = APIKeyQuery(name="searchresponse")
-
-def get_db():
-    db = None #SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+from sql.database import SQLSession
+db=SQLSession()
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -164,9 +159,8 @@ def get_personal_info(
         username,
 ):
     login_exception=HTTPException(
-        status_code=status.HTTP_303_SEE_OTHER,
-        detail="Redirecting to login page",
-        headers={"Location": "/users/login"},
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="You are not login",
         )
     if username:
         user=get_user(db,username)
@@ -183,13 +177,13 @@ def update_personal_info(db,
                          new_info: users.UserInDBchar
 ):
     login_exception=HTTPException(
-        status_code=status.HTTP_303_SEE_OTHER,
-        detail="Redirecting to login page",
-        headers={"Location": "/users/login"},
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="You are not login",
         )
     if username:
         user=get_user(db,username)
         if user:
+            print(new_info)
             person_info=crud.update_user(db,new_info)['user']
             return person_info
         else:
@@ -350,6 +344,7 @@ def updateFeedback(current_user: UserInDB,
 def create_session_token(db,
                      ):
      sessionvalue=session_scheme()
+     querys=query_scheme()
      return crud.create_userresponsecache(
          db,
          userResponseCache=users.UserResponseCache(
