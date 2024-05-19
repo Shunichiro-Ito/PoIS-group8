@@ -11,7 +11,6 @@ fake_users_db = {
         gender="m",
         occupation="admin",
         mbti="INTP",
-        interested_tag=[]
     ),
     "jessica": dict(
         user_id=1,
@@ -23,7 +22,6 @@ fake_users_db = {
         gender="f",
         occupation="Housewife",
         mbti="ENFJ",
-        interested_tag=["生活","育児","料理","家事"]
     ),
     "johndoe": dict(
         user_id=2,
@@ -34,8 +32,7 @@ fake_users_db = {
         birth=date(2004,1,1),
         gender="m",
         occupation="student",
-        mbti="ESTP",
-        interested_tag=["就活","勉強"]
+        mbti="ESTP"
     ),
     "alice": dict(
         user_id=3,
@@ -46,8 +43,7 @@ fake_users_db = {
         birth=date(2000,12,1),
         gender="f",
         occupation="clerk",
-        mbti="ISFP",
-        interested_tag=["生活","職場","化粧"]
+        mbti="ISFP"
     ),
 }
 

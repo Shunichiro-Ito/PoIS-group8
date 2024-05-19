@@ -25,7 +25,7 @@ class UserInpi(BaseModel):
     mbti: str= Field(..., max_length=4,pattern="^[IE][NS][FT][PJ]$")
 
 class UserIntag(BaseModel):
-    interested_tag: list
+    interested_tag: list[int]
 
 class UserInpw(BaseModel):
     password:str=Field(...,min_length=8)
@@ -51,7 +51,7 @@ class UserInDBchar(User):
     mbti: str= Field(..., max_length=4,pattern="^[IE][NS][FT][PJ]$")
 
 class UserInDBtag(User):
-    interested_tag: list
+    interested_tag: list[int]
 
 class UserInDB1(UserInDBchar,UserInDBpw):
     user_id: int

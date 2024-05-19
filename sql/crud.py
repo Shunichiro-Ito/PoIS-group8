@@ -75,7 +75,11 @@ def get_users(
         all: bool = False
 ):
     if isinstance(user_id,int):
-        return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db if i['user_id']==user_id][0]
+        user_list=[fakedb.fake_users_db[i] for i in fakedb.fake_users_db if i['user_id']==user_id]
+        if user_list:
+            return user_list[0]
+        else:
+            return None
         return db.query(models.User).filter(models.User.user_id == user_id).first()
     elif isinstance(user_ids,list):
         return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db if i['user_id'] in user_id]
@@ -120,10 +124,10 @@ def get_tags(
         username: Optional[str] = None
 ):
     if user_id:
-        return [fakedb.fake_interest_tag_db[i] for i in fakedb.fake_interest_tag_db if i['user_id']==user_id]
+        return {i:fakedb.fake_interest_tag_db[i] for i in fakedb.fake_interest_tag_db if fakedb.fake_interest_tag_db[i]['user_id']==user_id}
         return db.query(models.interest_tag).filter(models.interest_tag.user_id == user_id).all()
     elif username:
-        return [fakedb.fake_interest_tag_db[i] for i in fakedb.fake_interest_tag_db if i['user_id']==get_users(db,username=username)['user_id']]
+        return {i:fakedb.fake_interest_tag_db[i] for i in fakedb.fake_interest_tag_db if fakedb.fake_interest_tag_db[i]['user_id']==get_users(db,username=username)['user_id']}
         return db.query(models.interest_tag).filter(models.User.user_name == username).all()
 
 @overload
@@ -694,9 +698,9 @@ def update_user(
             "user":userDB,
         }
     elif isinstance(user,users.UserInDBtag):
-        tag=get_tags(db,user.user_id)
+        current_tag=get_tags(db,user.user_id)
         for tag in current_tag:
-            fakedb.fake_interest_tag_db.pop(current_tag['tag_id'])
+            fakedb.fake_interest_tag_db.pop(tag)
         for tag in user.interested_tag:
             create_interest_tag(db,models.interest_tag(user_id=user.user_id,tag_id=tag))
         return {
@@ -814,7 +818,7 @@ def update_post(
                 "post":post,
                 "feedback":newFB,
             }
-        
+
 def update_tfidf(
         db: Session, 
         tfidf: posts.Post_v_tfidf

@@ -30,13 +30,15 @@ from dependencies import (authenticate_user,
                           get_posts_by_user,
                           verify_admin,
                           show_users,
-                          certify_user)
+                          certify_user,
+                          get_all_tags)
 
 router = APIRouter(
     prefix="/users",
     tags=["Users"],
     dependencies=[]
     )
+
 from dependencies import db
 
 @router.post("/token",response_model=Token)
@@ -139,12 +141,19 @@ async def create_user(user:UserIn):
 
 @router.get("/interest_tags")
 async def get_user_tag(current_user: User=Depends(get_current_user)):
-    return show_tags(fake_users_db,current_user)
+    user_interest_tags=show_tags(db,current_user)
+    #user_interest_tags=[tag['tag_id'] for tag in user_interest_tags]
+    available_tags=get_all_tags(db)
+
+    return {
+        "user_tags":user_interest_tags,
+        "available_tags":available_tags,
+    }
 
 @router.post("/interest_tags/submit")
 async def update_user_tag_submit(tags:UserIntag,
                           current_user: User=Depends(get_current_user)):
-    update_tags(fake_users_db,current_user,tags)
+    update_tags(db,user=current_user,new_tag=tags.interested_tag)
     return RedirectResponse('/',status_code=status.HTTP_303_SEE_OTHER)
 
 @router.get("/me")

@@ -193,18 +193,27 @@ def update_personal_info(db,
     
 def show_tags(db,user:UserInDB):
     userDB=crud.get_users(db,username=user.username)
-    user_tag=users.UserInDBtag(**userDB)
+    user_tag=crud.get_tags(db,user_id=userDB['user_id'])
+    #user_tag=crud.get_tags(db,user_id=userDB.user_id)
     #user_tag=UserInDBtag(**userDB.model_dump())
-    return user_tag.interested_tag
+    return user_tag
     
+def get_all_tags(db):
+    return crud.get_categories(db)
+
 def update_tags(db,
                 user:UserInDB,
-                new_tag:list):
-    userDB=crud.get_users(db,username=user.username)
-    userDB.update({"interested_tag":new_tag})
-    UserInDB=users.UserInDBtag(**userDB.model_dump())
-    UserUpdated=crud.update_user(db,UserInDB)
-    return UserUpdated
+                new_tag:list[int]
+                ):
+    old_interest_tags=crud.get_tags(db,username=user.username)
+
+    userTag=UserInDBtag(
+                        username=user.username,
+                        interested_tag=new_tag,
+                        displayed_name=user.displayed_name,
+                        )
+    userDB=crud.update_user(db,userTag)
+    return userDB
 
 def read_user(db,
               username,

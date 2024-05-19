@@ -11,9 +11,4 @@ fastapi_pagination
 pymysql
 databases
 sshtunnel
-scikit-learn
-numpy
-tqbm
-IPython
-curl
-datetime
+mecab-python3
