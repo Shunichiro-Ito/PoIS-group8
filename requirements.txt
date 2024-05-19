@@ -12,3 +12,4 @@ pymysql
 databases
 sshtunnel
 mecab-python3
+unidic-lite

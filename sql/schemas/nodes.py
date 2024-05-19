@@ -34,5 +34,5 @@ class userResponseCache(BaseModel):
     id: int
     sessionvalue: str
     querys: str
-    selectedurl: str
+    selectedurl: Union[str,None]
     action: action

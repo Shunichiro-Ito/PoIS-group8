@@ -18,10 +18,3 @@ class MecabTokenizer:
                 keywords.append(node.surface)
             node = node.next
         return keywords
-
-wakati = MeCab.Tagger("-Owakati")
-wakati.parse("pythonが大好きです").split()
-
-
-tagger = MeCab.Tagger()
-print(tagger.parse("pythonが大好きです"))

@@ -14,5 +14,6 @@
             "username": "root",
             "connectionTimeout": 30
         }
-    ]
+    ],
+    "python.defaultInterpreterPath": "/env/bin/python"
 }

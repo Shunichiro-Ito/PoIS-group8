@@ -153,8 +153,7 @@ async def get_user_tag(current_user: User=Depends(get_current_user)):
 @router.post("/interest_tags/submit")
 async def update_user_tag_submit(tags:UserIntag,
                           current_user: User=Depends(get_current_user)):
-    update_tags(db,user=current_user,new_tag=tags.interested_tag)
-    return RedirectResponse('/',status_code=status.HTTP_303_SEE_OTHER)
+    return update_tags(db,user=current_user,new_tag=tags.interested_tag)
 
 @router.get("/me")
 async def get_me(current_user: User = Depends(get_current_user)):

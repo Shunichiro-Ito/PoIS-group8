@@ -86,5 +86,5 @@ class Admin(BaseModel):
 class UserResponseCache(BaseModel):
     sessionvalue: str
     querys: str
-    selectedurl: str
+    selectedurl: Optional[str]=None
     action: str

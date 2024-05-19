@@ -206,7 +206,7 @@ def update_tags(db,
                 new_tag:list[int]
                 ):
     old_interest_tags=crud.get_tags(db,username=user.username)
-
+    
     userTag=UserInDBtag(
                         username=user.username,
                         interested_tag=new_tag,
@@ -351,15 +351,19 @@ def updateFeedback(current_user: UserInDB,
     return posts.PostOut(**pt),
 
 def create_session_token(db,
+                         query
                      ):
-     sessionvalue=session_scheme()
-     querys=query_scheme()
+     import uuid
+     import time
+     sessionvalue=session_scheme(f'{uuid.uuid4().hex}-{str(int(time.time()))}')
+     querys=query_scheme(query)
+
      return crud.create_userresponsecache(
          db,
          userResponseCache=users.UserResponseCache(
                 sessionvalue=sessionvalue,
                 querys=querys,
-                selectedurl=selectedurl,
+                selectedurl=None,
                 action="search"
             )
      )
