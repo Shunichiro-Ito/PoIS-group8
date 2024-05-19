@@ -90,7 +90,9 @@ async def submit_personal_info(
 ):
     if current_user:
         user=update_personal_info(fake_users_db,current_user.username,UserUpdate)
-        return user
+        output=UserInpi(**user)
+        #output=UserInpi(**user.model_dump())
+        return output
     else:
         raise HTTPException(
             status_code=status.HTTP_303_SEE_OTHER,

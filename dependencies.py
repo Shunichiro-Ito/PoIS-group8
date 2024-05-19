@@ -190,7 +190,7 @@ def update_personal_info(db,
     if username:
         user=get_user(db,username)
         if user:
-            person_info=crud.update_user(db,new_info)
+            person_info=crud.update_user(db,new_info)['user']
             return person_info
         else:
             raise login_exception
