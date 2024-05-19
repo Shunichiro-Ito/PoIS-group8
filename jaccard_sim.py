@@ -100,7 +100,7 @@ def main(current_user):
     for i in interested_tag:
         for j in range(10):
             key, value = list(sorted_sim.items())[j]
-            for k in range(#all text as dict)):
+            for k in range(all text as dict):
                 candidate_text = {}
                 if k[tag] == i and k[kmeans] == key:
                     candidate_text.update({'k[title]': key})
