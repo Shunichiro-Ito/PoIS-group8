@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 from models.users import Token
 
-import jaccard_sim
+#import jaccard_sim
 
 from fastapi import (
     Depends,
