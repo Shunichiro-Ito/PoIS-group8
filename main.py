@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 from models.users import Token
 
+import jaccard_sim
+
 from fastapi import (
     Depends,
     FastAPI,
@@ -42,12 +44,18 @@ add_pagination(app)
 @app.get("/",tags=["home"])
 async def root(token: Annotated[Token, Depends(oauth2_scheme)]):
     if token:
-        
         current_user = await get_current_user(token)
         if current_user:
             if not show_tags(fake_users_db,current_user):
+
                 return RedirectResponse("/users/interest_tags")
             else:
+                # AI
+                candidate_text = jaccard_sim.main(current_user)
+                # for i in range(5):
+                    # key, value = list(candidate_text.items())[i]
+                    # key: title, value: cal of similarity
+                # timeline of posts: db_posts_age - user_age
                 return {"user":current_user,"posts":"timeline of posts",}
     else:
         return RedirectResponse("/login")
