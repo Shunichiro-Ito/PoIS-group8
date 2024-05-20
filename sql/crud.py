@@ -223,7 +223,8 @@ def get_post_writers_initial(db: Session, user_id: int, post_id: int):
     return [
         fakedb.fake_post_writer_init_db[i] 
         for i in fakedb.fake_post_writer_init_db 
-        if i['user_id']==user_id and i['post_id']==post_id
+        if fakedb.fake_post_writer_init_db[i]['user_id']==user_id 
+        and fakedb.fake_post_writer_init_db[i]['post_id']==post_id
     ][0]
     return db.query(models.url).filter(
         models.url.user_id == user_id, 
@@ -234,7 +235,8 @@ def get_post_writers_dynamic(db: Session, user_id: int, post_id: int):
     return [
         fakedb.fake_post_writer_dynamic_db[i] 
         for i in fakedb.fake_post_writer_dynamic_db 
-        if i['user_id']==user_id and i['post_id']==post_id
+        if fakedb.fake_post_writer_dynamic_db[i] ['user_id']==user_id 
+        and fakedb.fake_post_writer_dynamic_db[i] ['post_id']==post_id
     ][0]
     return db.query(models.Post_v_Writers_initialdata).filter(
         models.Post_v_Writers_initialdata.user_id == user_id, 
@@ -245,7 +247,8 @@ def get_post_reader(db: Session, user_id: int, post_id: int):
     return [
         fakedb.fake_post_reader_db[i]
         for i in fakedb.fake_post_reader_db
-        if i['user_id']==user_id and i['post_id']==post_id
+        if fakedb.fake_post_reader_db[i]['user_id']==user_id 
+        and fakedb.fake_post_reader_db[i]['post_id']==post_id
     ][0]
     return db.query(models.Post_v_Readers).filter(
         models.Post_v_Readers.user_id == user_id, 
@@ -253,8 +256,9 @@ def get_post_reader(db: Session, user_id: int, post_id: int):
     ).first()
 
 def get_hiddennode(db: Session, create_key: str,layer: int):
-    return [i['create_key'] for i in fakedb_search.fake_hiddennode_db
-            if i['create_key']==create_key and i['layer']==layer][0]
+    return [fakedb_search.fake_hiddennode_db[i]['create_key'] for i in fakedb_search.fake_hiddennode_db
+            if fakedb_search.fake_hiddennode_db[i]['create_key']==create_key 
+            and fakedb_search.fake_hiddennode_db[i]['layer']==layer][0]
     return db.query(models.hiddennode).filter(
         models.hiddennode.create_key == create_key,
         models.hiddennode.layer == layer
@@ -274,10 +278,15 @@ def get_wordhidden(
         toid: Optional[int] = None
 ):
     if fromid and toid:
-        return [fakedb_search.fake_wordhidden_db[i] 
+        finding=[fakedb_search.fake_wordhidden_db[i] 
                 for i in fakedb_search.fake_wordhidden_db 
-                if i['fromid']==fromid and i['toid']==toid
-        ][0]
+                if fakedb_search.fake_wordhidden_db[i]['fromid']==fromid 
+                and fakedb_search.fake_wordhidden_db[i]['toid']==toid
+        ]
+        if finding:
+            return finding[0]
+        else:
+            return None
         return db.query(models.wordhidden).filter(
             models.wordhidden.fromid == fromid,
             models.wordhidden.toid == toid
@@ -285,8 +294,9 @@ def get_wordhidden(
     elif toid:
         return [fakedb_search.fake_wordhidden_db[i] 
                 for i in fakedb_search.fake_wordhidden_db 
-                if i['fromid']==fromid and i['toid']==toid
-        ][0]
+                if fakedb_search.fake_wordhidden_db[i]['fromid']==fromid 
+                and fakedb_search.fake_wordhidden_db[i]['toid']==toid
+        ]
         return db.query(models.wordhidden).filter(
             models.wordhidden.fromid == fromid,
             models.wordhidden.toid == toid
@@ -294,7 +304,7 @@ def get_wordhidden(
     elif fromid:
         return [fakedb_search.fake_wordhidden_db[i] 
                 for i in fakedb_search.fake_wordhidden_db 
-                if i['fromid']==fromid
+                if fakedb_search.fake_wordhidden_db[i]['fromid']==fromid
         ]
         return db.query(models.wordhidden).filter(models.wordhidden.fromid == fromid).all()
 
@@ -318,8 +328,9 @@ def get_hiddenhidden(
     if fromid and toid:
         return [fakedb_search.fake_hiddenhidden_db[i]
                 for i in fakedb_search.fake_hiddenhidden_db
-                if i['fromid']==fromid and i['toid']==toid
-        ][0]
+                if fakedb_search.fake_hiddenhidden_db[i]['fromid']==fromid 
+                and fakedb_search.fake_hiddenhidden_db[i]['toid']==toid
+        ]
         return db.query(models.hiddenhidden).filter(
             models.hiddenhidden.fromid == fromid,
             models.hiddenhidden.toid == toid
@@ -327,7 +338,7 @@ def get_hiddenhidden(
     elif toid:
         return [fakedb_search.fake_hiddenhidden_db[i]
                 for i in fakedb_search.fake_hiddenhidden_db
-                if i['toid']==toid
+                if fakedb_search.fake_hiddenhidden_db[i]['toid']==toid
         ]
         return db.query(models.hiddenhidden).filter(
             models.hiddenhidden.toid == toid
@@ -335,7 +346,7 @@ def get_hiddenhidden(
     elif fromid:
         return [fakedb_search.fake_hiddenhidden_db[i]
                 for i in fakedb_search.fake_hiddenhidden_db
-                if i['fromid']==fromid
+                if fakedb_search.fake_hiddenhidden_db[i]['fromid']==fromid
         ]
         return db.query(models.hiddenhidden).filter(
             models.hiddenhidden.fromid == fromid
@@ -361,8 +372,9 @@ def get_hiddenurl(
     if fromid and toid:
         return [fakedb_search.fake_hiddenurl_db[i]
                 for i in fakedb_search.fake_hiddenurl_db
-                if i['fromid']==fromid and i['toid']==toid
-        ][0]
+                if fakedb_search.fake_hiddenurl_db[i]['fromid']==fromid 
+                and fakedb_search.fake_hiddenurl_db[i]['toid']==toid
+        ]
         return db.query(models.hiddenurl).filter(
             models.hiddenurl.fromid == fromid,
             models.hiddenurl.toid == toid
@@ -370,7 +382,7 @@ def get_hiddenurl(
     elif toid:
         return [fakedb_search.fake_hiddenurl_db[i]
                 for i in fakedb_search.fake_hiddenurl_db
-                if i['toid']==toid
+                if fakedb_search.fake_hiddenurl_db[i]['toid']==toid
         ]
         return db.query(models.hiddenurl).filter(
             models.hiddenurl.toid == toid
@@ -378,13 +390,16 @@ def get_hiddenurl(
     elif fromid:
         return [fakedb_search.fake_hiddenurl_db[i]
                 for i in fakedb_search.fake_hiddenurl_db
-                if i['fromid']==fromid
+                if fakedb_search.fake_hiddenurl_db[i]['fromid']==fromid
         ]
         return db.query(models.hiddenurl).filter(
             models.hiddenurl.fromid == fromid
             ).all()
     
 def get_userresponsecache(db: Session):
+    out=[nodes.userResponseCacheOut(**fakedb_search.fake_user_response_cache_db[i]) 
+         for i in fakedb_search.fake_user_response_cache_db]
+    return out
     return db.query(models.userResponseCache).all()
 
 @overload
@@ -407,17 +422,17 @@ def get_urls(
     if url_ids:
         return [fakedb_search.fake_url_db[i] 
                 for i in fakedb_search.fake_url_db 
-                if i['url_id'] in url_ids
+                if fakedb_search.fake_url_db[i]['url_id'] in url_ids
         ]
         return db.query(models.url).filter(models.url.url_id.in_(url_ids)).all()
     elif type:
         return [fakedb_search.fake_url_db[i] 
                 for i in fakedb_search.fake_url_db 
-                if i['type']==type
+                if fakedb_search.fake_url_db[i]['type']==type
         ]
         return db.query(models.url).filter(models.url.type == type).all()
     else:
-        return fakedb_search.fake_url_db
+        return [fakedb_search.fake_url_db[i] for i in fakedb_search.fake_url_db]
         return db.query(models.url).all()
     
 def create_user(
@@ -630,11 +645,14 @@ def create_hiddenurl(
 
 def create_userresponsecache(     
         db: Session, 
-        userresponsecache: nodes.userResponseCache
+        userresponsecache: nodes.userResponseCacheIn
 ):
     id=len(fakedb_search.fake_user_response_cache_db)
-    fakedb_search.fake_user_response_cache_db.update({id:userresponsecache.model_dump()})
-    return fakedb_search.fake_user_response_cache_db[id]
+    out=nodes.userResponseCacheOut(**userresponsecache.model_dump(),
+                                   id=id)
+    fakedb_search.fake_user_response_cache_db.update({id:out.model_dump()})
+    
+    return out
     db_userresponsecache=models.userResponseCache(**userresponsecache.model_dump())
     db.add(db_userresponsecache)
     db.commit()

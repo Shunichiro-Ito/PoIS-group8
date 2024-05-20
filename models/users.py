@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Any, Optional, Union
 from pydantic import BaseModel, Field
 from enum import Enum
 from datetime import date
@@ -66,5 +66,5 @@ class Admin(BaseModel):
     username: str
 
 class Session(BaseModel):
-    session_token: str
-    query_token: str
+    session_token: Any
+    query_token: Any

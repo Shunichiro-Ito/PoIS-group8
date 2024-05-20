@@ -107,7 +107,7 @@ fake_url_db={
         url_id="url1",
         url="https://www.google.com",
         category="post",
-        user_id="None",
+        user_id=None,
         post_id=1
     ),
     2:dict(

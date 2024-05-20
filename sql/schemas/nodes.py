@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Union
+from typing import Any, Optional, Union
 from datetime import date,datetime
 from enum import Enum
 
@@ -30,9 +30,15 @@ class hiddenurl(BaseModel):
     toid: int
     strength: float
 
-class userResponseCache(BaseModel):
+class userResponseCacheIn(BaseModel):
+    sessionvalue: Any
+    querys: Any
+    selectedurl: Union[str,None]
+    action: action
+
+class userResponseCacheOut(BaseModel):
     id: int
-    sessionvalue: str
-    querys: str
+    sessionvalue: Any
+    querys: Any
     selectedurl: Union[str,None]
     action: action

@@ -15,8 +15,8 @@ from fastapi import (
 
 from fastapi.security import APIKeyQuery
 
-query_scheme = APIKeyQuery(name="searchresponse")
-cookie_scheme = APIKeyQuery(name="session")
+query_scheme = APIKeyQuery(name="Query")
+cookie_scheme = APIKeyQuery(name="Session")
 
 from typing import Annotated,Literal
 from models.users import User,Session
@@ -28,7 +28,7 @@ from search.searchengine import searcher
 from fakedb import fake_users_db
 
 from routers import posts, users
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse,JSONResponse
 from models.users import Token
 
 app=FastAPI(
@@ -95,38 +95,38 @@ async def train_neural_network(admin:User=Annotated[User,Depends(verify_admin)])
     Search=searcher()
     return Search.train()
 
-@app.get('/search/{key_words}',tags=["Search"])
-async def search_posts(key_words: str,
-                       cat: Literal["all","post","user"]="all",
-                       query_token: str=Depends(query_scheme),
+@app.post('/search',tags=["Search"])
+async def search_posts(
+    current_user: Annotated[User,Depends(get_current_user)],
+    key_words: Annotated[str,Depends(unquote)],
+    cat: Literal["all","post","user"]="all",
 ):
+    session_token,query_token=create_session_token(db,key_words,current_user.username)
+
     from ai.mecab import MecabTokenizer
     key_word_ids=MecabTokenizer().tokenize(key_words)
+    print(type(key_word_ids))
     Search=searcher()
     urls=Search.query(
-            key_words=key_word_ids,
+            wordids=key_word_ids,
             searchRange=cat,
         )
 
-    return {
-        "search result":urls
-    }
+    response=JSONResponse(content={
+        "Session":session_token,
+        "Query":query_token,
+        "urls":urls,
+    })
 
-@app.post('/session_token')
-async def create_session(
-    current_user: Annotated[User,Depends(get_current_user)],
-    key_words: Annotated[str,Depends(unquote)],
-    ):
-    session_token,query_token=create_session_token(
-        db,query=key_words
-    )
-    RedirectResponse(f"/search/{key_words}")
-    return Session(
-        session_token=session_token,
-        query_token=query_token,
-    
+    response.set_cookie(
+        key="Session",
+        value=session_token,
+        max_age=1800,  # Cookie expires in 1 hour
+        httponly=True,
+        samesite="Strict",
     )
 
+    return response
 
 #import uvicorn
 #if __name__ == "__main__":

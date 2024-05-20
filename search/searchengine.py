@@ -29,7 +29,7 @@ class searcher():
             rows=crud.get_urls(net.db,type='post')
         elif searchRange=='user':
             rows=crud.get_urls(net.db,type='user')
-        urlids=[i.url_id for i in rows]
+        urlids=[i['url_id'] for i in rows]
         nnres=net.getresult(wordids,urlids)
         scores=dict([urlids[i],nnres[i]] for i in range(len(urlids)))
         return self.normalizescores(scores)

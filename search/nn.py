@@ -52,11 +52,13 @@ class searchnet:
         else: res=crud.get_hiddenurl(self.db,fromid=fromid,toid=toid)
         
         #res = self.con.query('select strength from %s where fromid=%d and toid=%d' % (table, fromid, toid)).fetchone()
-        if res == None:
+        if res:
+            return res[0]['strength']
+        else:
             if layer == 0: return -0.2
             if layer == 1: return 0
             if layer == 2: return 0.1
-        return res[0]
+        raise ValueError('No such link to get the strength: %d %d %d' % (fromid, toid, layer))
     
     def setstrength(self, fromid, toid, layer, strength):
         if layer == 0: 

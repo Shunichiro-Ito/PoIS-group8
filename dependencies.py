@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone,date
 from typing import Annotated, Union,Literal
 from sql import crud
-from sql.schemas import users,posts
+from sql.schemas import users,posts,nodes
 #from sql.database import SessionLocal
 
 from sql import crud
@@ -29,8 +29,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/token",auto_error=False,)
-session_scheme = APIKeyCookie(name="session")
-query_scheme = APIKeyQuery(name="searchresponse")
+session_scheme = APIKeyCookie(name="session",description="id of user's query",auto_error=False,)
+query_scheme = APIKeyQuery(name="searchresponse",description="user query",auto_error=False,)
 from sql.database import SQLSession
 db=SQLSession()
 
@@ -206,7 +206,7 @@ def update_tags(db,
                 new_tag:list[int]
                 ):
     old_interest_tags=crud.get_tags(db,username=user.username)
-    
+
     userTag=UserInDBtag(
                         username=user.username,
                         interested_tag=new_tag,
@@ -236,7 +236,7 @@ def read_user(db,
             else:
                 user=UserOut(**user)
                 #user=UserOut(**user.model_dump())
-       
+        
             return user
         else:
             raise NotExistException
@@ -351,22 +351,23 @@ def updateFeedback(current_user: UserInDB,
     return posts.PostOut(**pt),
 
 def create_session_token(db,
-                         query
+                         query,
+                         username
                      ):
-     import uuid
-     import time
-     sessionvalue=session_scheme(f'{uuid.uuid4().hex}-{str(int(time.time()))}')
-     querys=query_scheme(query)
+    from uuid import uuid4
+    from time import time
 
-     return crud.create_userresponsecache(
-         db,
-         userResponseCache=users.UserResponseCache(
-                sessionvalue=sessionvalue,
-                querys=querys,
-                selectedurl=None,
-                action="search"
-            )
-     )
+    sessionvalue=f'{uuid4().hex}-{str(int(time()))}'
+    querys=f'{username}={query}'
+
+    updatesession(
+        db=db,
+        session=sessionvalue,
+        api_key=querys,
+        action="search"
+    )
+
+    return sessionvalue,querys
 
 def updatesession(db,
                   session: str,
@@ -375,8 +376,10 @@ def updatesession(db,
                   key_words: str=""):
     return crud.create_userresponsecache(
             db,
-            session=session,
-            api_key=api_key,
-            action=action,
-            key_words=key_words
+            userresponsecache=nodes.userResponseCacheIn(
+                sessionvalue=session,
+                querys=api_key,
+                selectedurl=None,
+                action=action
+            )
         )
