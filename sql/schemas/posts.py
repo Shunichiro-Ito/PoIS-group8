@@ -8,7 +8,7 @@ class Feedback(Enum):
     early="early"
     impossible="impossible"
 
-class gender(Enum):
+class Gender(Enum):
     f="f"
     m="m"
 
@@ -63,7 +63,7 @@ class Post_v_Writers_dinamicdatanoId(BaseModel):
     user_id: int
     category_id: int
     age: int
-    gender: gender
+    gender: Gender
     occupation: str
     mbti: str
 

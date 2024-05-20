@@ -316,15 +316,22 @@ def upload_post_db(
         user_id=user.user_id,
         post_date=datetime.now(),
     )
+    dict_tfidf={key:value for key,value in zip(
+        ['_'.join(['tfidf',str(i)]) for i in range(0,20)],
+        [1/19]*20)}
     tfidf=posts.Post_v_tfidfnoId(
-        zip(
-            ['_'.join(['tfidf',str(i)]) for i in range(0,20)],
-            [1/19]*20)
+        **dict_tfidf
         )
     userDetail=get_user(db,user.username)
+    dictuserDetail=userDetail.model_dump()
+    dictuserDetail.pop('user_id')
+    tag_id=post.tag_id[0]
+    dictPost=post.model_dump()
+    dictPost.pop('tag_id')
+    dictPost.update({'category_id':tag_id})
     writers_dynamic=posts.Post_v_Writers_dinamicdatanoId(
-        **userDetail.model_dump(),
-        **post.model_dump()
+        **dictuserDetail,
+        **dictPost
     )
     output=crud.create_post(
         db,
