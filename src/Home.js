@@ -1,52 +1,47 @@
 
 import Sidebar from "./components/Sidebar"; 
 import Header from "./components/Header"; 
+import PopularTags from "./components/PopularTags";
+import ReactionButton from "./components/ReactionButton";
+import axios from 'axios';
+import { useEffect, useState } from "react";
+import "./reset.css";
+import { Button, Card, CardContent, TextField, Box, Chip,Container,Paper, Typography } from "@mui/material"; 
 import Cookies from 'js-cookie';
 
 
-// const mockPosts = [
-//   { id: 1, author: "User1", content: "This is the first post" },
-//   { id: 2, author: "User2", content: "Here is another post" },
-// ];
-
-// const App = () => {
-//   const [posts, setPosts] = useState(mockPosts);
-
-//   const handleNewPost = (newContent) => {
-//     const newPost = {
-//       id: posts.length + 1,
-//       author: "UserNew",
-//       content: newContent,
-//     };
-//     setPosts([...posts, newPost]);
-//   };
-
-//   return (
-//     <Container>
-//       <Sidebar />
-//       <PostForm onSubmit={handleNewPost} />
-//       <Timeline posts={posts} />
-//     </Container>
-//   );
-// };
-
-// export default App;
-
-import { useEffect, useState } from "react";
-import "./reset.css";
-import { Button, Card, CardContent, TextField, Box, Chip } from "@mui/material"; 
 import "./App.css";
 
-const TAGS = ["生活", "勉強", "試験", "就活", "結婚", "受験"];
+let TAGS=[];
+let INDEX=[];
+const POPULAR_TAGS = ["試験", "就活", "生活"];
 
 export const Home = () => {
   const [posts, setPosts] = useState([]);
+  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tags, setTags] = useState([]);
   const [age, setAge] = useState("");
   const access_token = Cookies.get('access_token');
 
   useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/users/interest_tags', {
+          headers: {
+            'Authorization': `bearer ${access_token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        console.log(response.data.available_tags.map((tag) => tag.tag_name))
+        TAGS = response.data.available_tags.map((tag) => tag.tag_name);
+        INDEX = response.data.available_tags.map((tag) => tag.tag_id);
+
+      } catch (error) {
+        console.error('Error fetching tags:', error);
+      }
+    };
+    fetchTags();
     fetch("http://localhost:3300/posts")
       .then((res) => res.json())
       .then((json) => setPosts(json));
@@ -59,21 +54,21 @@ export const Home = () => {
   return (
   <div>
     <Header />
-    
-    <div className="container"> 
-      <div className="input-container">
-      {/* <input
-        style={{
-          height: "200px",
-          width: "%",
-          outline: "black solid 1px",
-        }}
-        type="text"
-        onChange={(e) => {
-          setContent(e.target.value);
-        }}
-      /> */}
+    <Box>
+    <PopularTags  />  
       
+{/* ここから投稿コンテナ */}
+    <Box sx={{  }}>
+      <Container sx={{width:"50%"}}> 
+      <TextField 
+            fullWidth
+            multiline
+            rows={1}
+            variant="outlined"
+            placeholder="タイトルを入力してください"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
       <TextField 
             fullWidth
             multiline
@@ -83,41 +78,23 @@ export const Home = () => {
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
-      
-      </div>
-{/*削除機能をつける前のコード */}
-      {/* <div>
-        {tags.map((tag, index) => (
-          <span key={index}>#{tag} </span>
-        ))}
-      </div> */}
-
-      <div>
-        {tags.map((tag, index) => (
-          <span key={index}>
-            #{tag} <span onClick={() => removeTag(index)} style={{cursor: 'pointer', color: 'red'}}>×</span>
-          </span>
-        ))}
-      </div>
-    <div className="select-button-container">
-    <input className="age-input"
-        type="number"
-        placeholder="年齢"
-        value={age}
-        onChange={(e) => setAge(e.target.value)}
-        style={{ marginRight: "10px" }}
+      <TextField 
+      type="number"
+      label="当時の年齢を入力してください"
+      value={age}
+      onChange={(e) => setAge(e.target.value)}
+      style={{ marginRight: "10px" ,width:"100%"}}
+      variant="outlined"
       />
-     
-
-    
-      <select
+        
+      <select className="tag-select"
         onChange={(e) => {
           if (e.target.value !== "") {
             setTags((prev) => [...prev, e.target.value]);
           }
         }}
       >
-        <option value="">タグ</option>
+        <option value="">タグを入力してください</option>
         {TAGS.map((tag, index) => {
           return (
             <option key={index} value={tag}>
@@ -126,23 +103,25 @@ export const Home = () => {
           );
         })}
       </select>
-
       <Button variant="contained"
       sx={{ backgroundColor: '#89cfeb' , color: '#4d5156' }}
-        onClick={() => {
-          fetch("http://localhost:3300/posts", {
-            method: "POST",
-            body: JSON.stringify({
-              content: content,
-              author: "author",
-              Age:age,
-              tags: tags,
-            }),
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-          });
+        onClick={async() => {
+          const post_tag_id=tags.map(tag => INDEX[TAGS.indexOf(tag)])
+          console.log(post_tag_id)
+          const url='http://127.0.0.1:8000/posts/submit_post';
+          const response = await axios.post(url, 
+            {
+              "title": title,
+              "content": content,
+              "age": age,
+              "tag_id": post_tag_id,
+              "anonymous": true
+            }, 
+            {headers:{
+              'Authorization':`bearer ${access_token}`,
+              'Content-Type':'application/json'
+            }});
+            console.log(response.data)
         }}
         style={{
           outline: "black solid 1px",
@@ -151,38 +130,47 @@ export const Home = () => {
       >
         投稿を追加
       </Button>
-    </div>
+   
       <div>
-        {/* {posts.map((post, index) => {
-          return (
-            <div className="card" key={post.id}>
-              {post.id}:{post.content}:{post.author}:
-              {post.tags.map((tag, idx) => (
-                <span key={idx}>#{tag} </span>
-              ))}
-            </div>
-          );
-        })} */}
-
+        {tags.map((tag, index) => (
+          <span key={index}>
+            #{tag} <span onClick={() => removeTag(index)} style={{cursor: 'pointer', color: 'red'}}>×</span>
+          </span>
+        ))}
+      </div>
+      
+      </Container> 
+{/* ここまで投稿コンテナ */}
+{/* ここから投稿表示エリア */}
+      <Container sx={{width:"50%"}}>
+ 
            {posts.map((post) => (
-            <Card className="card" key={post.id} sx={{ marginBottom: 2 }}>
-              <CardContent className="post-box">
-                <div className="post-author">{post.author}</div>
-                <div className="post-age">{post.Age+"歳"}</div>
-                <div className="post-content">{post.content}</div>
-                
-                <Box mt={1}>
+            <Card className="card" key={post.id} sx={{ marginBottom: 2 , overflow: 'auto' }}>
+              <div class="card-header">
+              <Typography variant="h7">{post.author}</Typography>
+              <Typography variant="h7">{post.Age+"歳"}</Typography>
+              </div>
+              <Box mt={1}>
                   {post.tags.map((tag, idx) => (
-                    <Chip key={idx} label={`#${tag}`} style={{ marginRight: 4 }} />
+                    <Chip key={idx} label={`#${tag}`} style={{ marginRight: 4 ,marginBottom:4}} />
 
                   ))}
-                </Box>
+              </Box>
+              <CardContent sx={{ marginTop:"5px",border: '1px solid #000',width:"100%",height:"60%" ,overflow: 'auto'}}>
+                <Typography variant="body2" >{post.content}</Typography>
               </CardContent>
+              <div className="card-footer" >
+                <ReactionButton />
+              </div>
             </Card>
           ))}
-      </div>
-    </div>
+      </Container>
+{/* ここまで投稿表示エリア */}
+    </Box>
+    </Box>
   </div>
+  
   );
 };
+
 export default Home;

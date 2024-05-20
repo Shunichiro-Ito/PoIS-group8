@@ -48,10 +48,9 @@ const Login = () => {
         },
       })
       .then((response) => {
-        console.log(response.data);
         const access_token = response.data["access_token"]
-        localStorage.setItem('token', JSON.stringify(access_token));
         Cookies.set('access_token', access_token, { expires: 7 }); // 7日間有効
+        Cookies.set('token_type', response.data["token_type"], { expires: 7 }); // 7日間有効
         window.location.href = 'http://localhost:3000/home';
       })
       .catch((error) => {
@@ -63,10 +62,8 @@ const Login = () => {
 
 
   return (
-    <div>
-      <Header />
-    
-    <Container maxWidth="xs">
+    <Container maxWidth="md">
+    <Header />
       <Box
         sx={{
           marginTop: 8,
@@ -84,9 +81,10 @@ const Login = () => {
             margin="normal"
             required
             fullWidth
-            id="name"
-            label="ユーザーネーム"
             name="name"
+            label="ユーザーネーム"
+            type="name"
+            id="name"
             autoComplete="name"
             autoFocus
             value={name}
@@ -119,7 +117,7 @@ const Login = () => {
           <Grid container>
             <Grid item xs>
               <Llink to ="/passforget">
-                パスワードを忘れた
+                
               </Llink>
             </Grid>
 
@@ -132,7 +130,6 @@ const Login = () => {
         </Box>
       </Box>
     </Container>
-    </div>
   );
 };
 

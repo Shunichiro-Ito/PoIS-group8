@@ -29,21 +29,17 @@ const PassForget = () => {
     event.preventDefault();
     try {
       const access_token = Cookies.get('access_token');
+      console.log(access_token)
       const url='http://127.0.0.1:8000/users/reset_password';
-      const response = await axios.post(url, {UserDB: {password: "toEncode"}, UserReset: {new_password: "toEncoder"}}, 
+      const response = await axios.post(url, {UserDB: {password: name}, UserReset: {new_password: pass}}, 
       {headers:{
         'Authorization':`bearer ${access_token}`,
         'Content-Type':'application/json'
       }});
-      
-      // アクセストークンを保存する (CookieやlocalStorage、Redux storeなど)
-      // ...
-
-      // 認証が必要なページへリダイレクトする
-      console.log("Yes")
       console.log(response.data);
+      window.location.href = 'http://localhost:3000/profile';
     } catch (error) {
-      console.log("No")
+      console.log(error)
       setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
     }
   };

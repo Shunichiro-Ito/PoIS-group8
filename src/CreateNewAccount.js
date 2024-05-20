@@ -8,16 +8,18 @@ import {
   Container,
   TextField,
   Typography,
+  Select,
 } from "@mui/material";
 import Header from "./components/Header";
 import Cookies from 'js-cookie';
 import "./reset2.css";
-import "./App.css";
+import GenderSelect from './components/GenderSelect';
+import MBTISelect from "./components/MBTISelect";
 
 const MBTI = ["INTJ（建築家）","INTP（論理学者）","ENTJ（指揮官）","ENTP（討論者）","INFJ（提唱者）",
 "INFP（仲介者）","ENFJ（主人公）","ENFP（運動家）","ISTJ（管理者）","ISFJ（擁護者）","ESTJ（幹部）",
 "ESFJ（領事）","ISTP（巨匠）","ISFP（冒険家）","ESFP（エンターテイナー）","ESTP（起業家）"];
-const SEX = ["男性", "女性","その他"]
+const GENDER = ["男性", "女性"]
 
 const CreateNewAccount = () => {
   const [name, setName] = useState('');
@@ -26,7 +28,8 @@ const CreateNewAccount = () => {
   const [occupation, setOccupation] = useState('')
   const [error, setError] = useState('');
   const [mbti, setMBTI] = useState([]);
-  const [sex, setSex] = useState([]);
+  const [gender, setgender] = useState([]);
+  const [birthdate, setBirthdate] = useState('');
   const access_token = Cookies.get('access_token');
 
   const handleNameChange = (event) => {
@@ -41,18 +44,18 @@ const CreateNewAccount = () => {
   const handleOccupation = (event) => {
     setOccupation(event.currentTarget.value);
   };
-  const [birthdate, setBirthdate] = useState('');
+  
 
 
   const handleCreateNewAccount = async(event) => {
     event.preventDefault();
-    console.log(name)
-    console.log(pass)
-    console.log(mbti)
-    console.log(birthdate)
-    console.log(occupation)
-    console.log(mbti.slice(0,4))
-    
+    let gender2=String
+    if (gender == ["男性"]){
+      gender2="m"
+    }else{
+      gender2="f"
+    };
+
     try {
       const url='http://127.0.0.1:8000/users/register';
       const response = await axios.post(url, 
@@ -75,6 +78,32 @@ const CreateNewAccount = () => {
       // 認証が必要なページへリダイレクトする
       console.log("Yes")
       console.log(response.data);
+      const data = new URLSearchParams({
+        grant_type: '',
+        username:name,
+        password:pass,
+        scope: '',
+        client_id: '',
+        client_secret: '',
+      });
+      axios
+        .post('http://127.0.0.1:8000/users/token', data, {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        })
+        .then((response) => {
+          const access_token = response.data["access_token"]
+          Cookies.set('access_token', access_token, { expires: 7 }); // 7日間有効
+          Cookies.set('token_type', response.data["token_type"], { expires: 7 }); // 7日間有効
+          window.location.href = 'http://localhost:3000/settag';
+        })
+        .catch((error) => {
+          console.error(error);
+          setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
+          alert("ユーザーネームかパスワードが違います")
+        });
     } catch (error) {
       console.log("No")
       setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
@@ -83,9 +112,8 @@ const CreateNewAccount = () => {
 
 
   return (
-    <div>
-      <Header />
-    <Container maxWidth="xs">
+    <Container maxWidth="md">
+    <Header />
       <Box
         sx={{
           marginTop: 8,
@@ -104,7 +132,8 @@ const CreateNewAccount = () => {
             required
             fullWidth
             id="name"
-            label="ユーザーネーム"
+            type="name"
+            label="1．ユーザーネーム"
             name="name"
             autoComplete="name"
             autoFocus
@@ -112,25 +141,25 @@ const CreateNewAccount = () => {
             onChange={handleNameChange}
           />
 
-        {/*  <TextField
+          <TextField
             margin="normal"
             required
             fullWidth
             name="password"
-            label="表示するユーザーネーム"
+            label="2．表示するユーザーネーム"
             type="displayed_name"
             id="displayed_name"
             autoComplete="displayed_name"
             value={displayed_name}
             onChange={handleDisplayedNameChange}
-          /> */}
+          /> 
 
           <TextField
             margin="normal"
             required
             fullWidth
             name="password"
-            label="設定するパスワード"
+            label="3．設定するパスワード"
             type="password"
             id="password"
             autoComplete="current-password"
@@ -143,7 +172,7 @@ const CreateNewAccount = () => {
             required
             fullWidth
             name="occupation"
-            label="自分の職業"
+            label="4．自分の職業"
             type="occupation"
             id="occupation"
             autoComplete="current-occupation"
@@ -151,26 +180,26 @@ const CreateNewAccount = () => {
             onChange={handleOccupation}
           />
 
-          <select
-            onChange={(e) => {
-              if (e.target.value !== "") {
-                setSex(e.target.value);
-              }
-            }}
-          >
-            <option value="">自分の性別</option>
-            {SEX.map((sex, index) => {
-              return (
-                <option key={index} value={sex}>
-                  {sex}
-                </option>
-              );
-            })}
-          </select>
-        
+          <div>
+            <GenderSelect
+              gender={gender}
+              setgender={setgender}
+              genderOptions={GENDER}
+              label="5．自分の性別"
+            />
+          </div>
 
           <div>
-            <label htmlFor="birthdate" >自分の生年月日　</label>
+            <MBTISelect
+              MBTI={mbti}
+              setMBTI={setMBTI}
+              MBTIOptions={MBTI}
+              label="6．自分の性格"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="birthdate" >　7．自分の生年月日　</label>
             <input
               type="date"
               id="birthdate"
@@ -180,27 +209,7 @@ const CreateNewAccount = () => {
             />
           </div>
           
-        
-
-          <select
-            onChange={(e) => {
-              if (e.target.value !== "") {
-                setMBTI(e.target.value);
-              }
-            }}
-          >
-            <option value="">自分の性格</option>
-            {MBTI.map((mbti, index) => {
-              return (
-                <option key={index} value={mbti}>
-                  {mbti}
-                </option>
-              );
-            })}
-          </select>
-
           <Button
-            margin="normal"
             type="submit"
             fullWidth
             variant="contained"
@@ -211,7 +220,6 @@ const CreateNewAccount = () => {
         </Box>
       </Box>
     </Container>
-    </div>
   );
 };
 

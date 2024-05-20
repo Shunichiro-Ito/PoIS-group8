@@ -85,12 +85,6 @@ body {
   height:100%;
 }
 
-input[type="text"], select {
-  padding: 10px;
-  margin-top: 10px;
-  border: 2px solid #ddd;
-  width: calc(100% - 24px);
-}
 
 button {
   padding: 10px 20px;
@@ -124,17 +118,9 @@ span.tag {
 }
 
 select {
-  padding: 5px; /* パディングを小さくする */
-  font-size: 17px; /* フォントサイズを小さくする */
-  border: 10px solid #ccc; /* ボーダーを細くする */
-  margin-top: 5px; /* マージンを調整する */
-  width: 160px; 
-  line-height: 2; /* 行の高さを設定 */
-  display: inline-block; /* インラインブロック要素に設定 */
+  line-height: 3.5; /* 行の高さを設定 */
   height: 50px; /* 高さを設定 */
-  box-sizing: border-box; /* ボーダーを含むサイズを指定 */
   border-radius: 4px;
-  font-weight: 50;
 }
 
 ol{
