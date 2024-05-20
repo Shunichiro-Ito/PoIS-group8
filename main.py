@@ -11,24 +11,29 @@ from urllib.parse import unquote
 from fastapi import (
     Depends,
     FastAPI,
+    Response,
+    Cookie,
+    Header,
 )
 
-from fastapi.security import APIKeyQuery
-
-query_scheme = APIKeyQuery(name="searchresponse")
-cookie_scheme = APIKeyQuery(name="session")
-
-from typing import Annotated,Literal
+from typing import Annotated,Literal,Union
 from models.users import User,Session
 from sql.database import SQLSession
 
-from dependencies import get_current_user,show_tags,verify_admin,oauth2_scheme,create_session_token
+from dependencies import (
+    get_current_user,
+    show_tags,
+    verify_admin,
+    oauth2_scheme,
+    create_session_token,
+    get_display_posts_by_urls
+)
 
 from search.searchengine import searcher
 from fakedb import fake_users_db
 
 from routers import posts, users
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse,JSONResponse
 from models.users import Token
 
 app=FastAPI(
@@ -81,11 +86,6 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(posts.router)
 
-
-@app.get('/login')
-async def login_page():
-    return {"message":"login page"}
-
 @app.post('/neural_network/nnscore',tags=["Search"])
 async def train_neural_network(admin:User=Annotated[User,Depends(verify_admin)]):
     Search=searcher()
@@ -96,38 +96,47 @@ async def train_neural_network(admin:User=Annotated[User,Depends(verify_admin)])
     Search=searcher()
     return Search.train()
 
-@app.get('/search/{key_words}',tags=["Search"])
-async def search_posts(key_words: str,
-                       cat: Literal["all","post","user"]="all",
-                       query_token: str=Depends(query_scheme),
+@app.post('/search',tags=["Search"])
+async def search_posts(
+    current_user: Annotated[User,Depends(get_current_user)],
+    key_words: Annotated[str,Depends(unquote)],
+    cat: Literal["all","post","user"]="all",
 ):
+    session_token,query_token=create_session_token(db,key_words,current_user.username)
+
     from ai.mecab import MecabTokenizer
     key_word_ids=MecabTokenizer().tokenize(key_words)
+
     Search=searcher()
     urls=Search.query(
-            key_words=key_word_ids,
+            wordids=key_word_ids,
             searchRange=cat,
         )
 
-    return {
-        "search result":urls
-    }
+    display_posts=get_display_posts_by_urls(urls)
 
-@app.post('/session_token')
-async def create_session(
-    current_user: Annotated[User,Depends(get_current_user)],
-    key_words: Annotated[str,Depends(unquote)],
-    ):
-    session_token,query_token=create_session_token(
-        db,query=key_words
+    response=JSONResponse(content={
+        "Session":session_token,
+        "Query":query_token
+    })
+
+    response.set_cookie(
+        key="Session",
+        value=session_token,
+        max_age=1800,  # Cookie expires in 30 minutes
+        httponly=True,
+        samesite="Strict",
     )
-    RedirectResponse(f"/search/{key_words}")
-    return Session(
-        session_token=session_token,
-        query_token=query_token,
     
-    )
-
+    from sql.crud import get_userresponsecache
+    return {
+        "Response":response,
+        "Display Posts":display_posts,
+        "session_id":session_token,
+        "query":query_token,
+        "NN Score":Search.nnscore(wordids=key_word_ids,searchRange=cat),
+        "UserResponseCache":get_userresponsecache(db=db)
+    }
 
 #import uvicorn
 #if __name__ == "__main__":

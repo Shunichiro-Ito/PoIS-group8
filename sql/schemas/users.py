@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Any, Optional, Union
 from pydantic import BaseModel, Field
 from enum import Enum
 from datetime import date
@@ -84,7 +84,7 @@ class Admin(BaseModel):
     username: str
 
 class UserResponseCache(BaseModel):
-    sessionvalue: str
-    querys: str
+    sessionvalue: Any
+    querys: Any
     selectedurl: Optional[str]=None
     action: str

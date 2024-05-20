@@ -1,7 +1,7 @@
 fake_hiddennode_db={
     1:dict(create_key="就活",
             layer=0),
-    1:dict(create_key="就活",
+    2:dict(create_key="就活",
             layer=1),
 }
 
@@ -74,54 +74,54 @@ fake_user_response_cache_db={
         id="1",
         sessionvalue="1",
         querys="就活",
-        selectedurl="url1",
-        actions="search"),
+        selectedurl=None,
+        action="search"),
     2:dict(
         id="2",
         sessionvalue="2",
         querys="進学",
         selectedurl="url2",
-        actions="click"),
+        action="click"),
     3:dict(
         id="3",
         sessionvalue="3",
         querys="就活",
         selectedurl="url3",
-        actions="good"),
+        action="good"),
     4:dict(
         id="4",
         sessionvalue="4",
         querys="生活",
         selectedurl="url1",
-        actions="early"),
+        action="early"),
     5:dict(
         id="5",
         sessionvalue="5",
         querys="勉強",
         selectedurl="url2",
-        actions="impossible"),
+        action="impossible"),
 }
 
 fake_url_db={
     1:dict(
         url_id="url1",
-        url="https://www.google.com",
+        url="/posts/post_id/1",
         category="post",
-        user_id="None",
+        user_id=None,
         post_id=1
     ),
     2:dict(
         url_id="url2",
-        url="https://www.yahoo.com",
-        category="user",
-        user_id=2,
-        post_id=None
-    ),
-    3:dict(
-        url_id="url3",
-        url="/posts/",
+        url="/posts/post_id/3",
         category="post",
         user_id=None,
         post_id=2
+    ),
+    3:dict(
+        url_id="url3",
+        url="/posts/post_id/2",
+        category="post",
+        user_id=None,
+        post_id=3
     ),
 }

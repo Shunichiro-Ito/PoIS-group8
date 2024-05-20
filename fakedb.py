@@ -111,6 +111,18 @@ fake_posts_db={
         impossible=2,
         early=0
     ),
+    3:dict(
+        post_id=3,
+        title="unhappy carly",
+        content="Failed!!!",
+        age=20,
+        post_date=datetime(2024,5,4,0,0,0),
+        tag_id=["職場"],
+        anonymous=True,
+        good=10,
+        impossible=2,
+        early=0
+    ),
 }
 
 fake_post_user_db={
@@ -121,7 +133,11 @@ fake_post_user_db={
     2:dict(
         post_id=2,
         user_id=3,
-    )
+    ),
+    3:dict(
+        post_id=3,
+        user_id=1,
+    ),
 }
 
 fake_admin_db={

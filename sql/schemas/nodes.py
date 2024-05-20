@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Union
+from typing import Any, Optional, Union
 from datetime import date,datetime
 from enum import Enum
 
@@ -16,23 +16,29 @@ class hiddennode(BaseModel):
     layer: int
 
 class wordhidden(BaseModel):
-    fromid: int
-    toid: int
+    fromid: str
+    toid: str
     strength: float
 
 class hiddenhidden(BaseModel):
-    fromid: int
-    toid: int
+    fromid: str
+    toid: str
     strength: float
 
 class hiddenurl(BaseModel):
-    fromid: int
-    toid: int
+    fromid: str
+    toid: str
     strength: float
 
-class userResponseCache(BaseModel):
+class userResponseCacheIn(BaseModel):
+    sessionvalue: Any
+    querys: Any
+    selectedurl: Union[str,None]
+    action: action
+
+class userResponseCacheOut(BaseModel):
     id: int
-    sessionvalue: str
-    querys: str
+    sessionvalue: Any
+    querys: Any
     selectedurl: Union[str,None]
     action: action

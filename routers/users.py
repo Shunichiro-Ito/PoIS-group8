@@ -144,7 +144,7 @@ async def get_user_tag(current_user: User=Depends(get_current_user)):
     user_interest_tags=show_tags(db,current_user)
     #user_interest_tags=[tag['tag_id'] for tag in user_interest_tags]
     available_tags=get_all_tags(db)
-
+    
     return {
         "user_tags":user_interest_tags,
         "available_tags":available_tags,

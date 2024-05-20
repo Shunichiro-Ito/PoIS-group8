@@ -52,11 +52,13 @@ class searchnet:
         else: res=crud.get_hiddenurl(self.db,fromid=fromid,toid=toid)
         
         #res = self.con.query('select strength from %s where fromid=%d and toid=%d' % (table, fromid, toid)).fetchone()
-        if res == None:
+        if res:
+            return res[0]['strength']
+        else:
             if layer == 0: return -0.2
             if layer == 1: return 0
             if layer == 2: return 0.1
-        return res[0]
+        raise ValueError('No such link to get the strength: %d %d %d' % (fromid, toid, layer))
     
     def setstrength(self, fromid, toid, layer, strength):
         if layer == 0: 
@@ -220,13 +222,17 @@ class searchnet:
 
     def updatedatabase(self):
         # set them to database
+        print(f"wordids: {self.wordids}, hiddenids1: {self.hiddenids1}",f"hiddenids2: {self.hiddenids2}, urlids: {self.urlids}")
         for i in range(len(self.wordids)):
             for j in range(len(self.hiddenids1)):
+                self.hiddenids1=list(self.hiddenids1)
                 self.setstrength(self.wordids[i], self.hiddenids1[j], 0, self.wi[i][j])
         for j in range(len(self.hiddenids1)):
             for k in range(len(self.hiddenids2)):
+                self.hiddenids2=list(self.hiddenids2)
                 self.setstrength(self.hiddenids1[j], self.hiddenids2[k], 1, self.wh[j][k])
         for j in range(len(self.hiddenids2)):
             for k in range(len(self.urlids)):
                 self.setstrength(self.hiddenids2[j], self.urlids[k], 2, self.wo[j][k])
-        self.con.commit()
+        #self.con.commit()
+        return self.wordids, self.hiddenids1, self.hiddenids2, self.urlids
