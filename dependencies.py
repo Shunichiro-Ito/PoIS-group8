@@ -254,8 +254,10 @@ def get_a_post(db,
                
 ):
     if not user:
+        print(f"post_id: {post_id}")
         posts=crud.get_posts(db,post_ids=[post_id],anonymousIncluded=False)
     else:
+        print(f"username: {user.username}")
         posts=crud.get_posts(db,post_ids=[post_id],username=user.username)
     if len(posts)==0:
         raise HTTPException(
@@ -263,7 +265,8 @@ def get_a_post(db,
             detail="Post not found",
         )
     else:
-        return posts
+        return {"posts":posts,
+                "all_posts":crud.get_posts(db)}
 
 def verify_token(token: str = Header(None), session_token: str = Cookie(None)):
     if token or session_token:
@@ -430,7 +433,7 @@ def updatesession(db,
         else:
             print(f"no search_info")
 
-def get_display_posts_by_urls(urls):
+def get_display_posts_by_urls(urls,key_words:Optional[list[str]]=[]):
     
     posts=crud.get_posts(db,post_ids=[i['post_id'] for i in urls
                                       if i['category']=='post'])
@@ -439,17 +442,23 @@ def get_display_posts_by_urls(urls):
 
     displayed_posts_dict=zip(posts,user_info,urls)
     displayed_posts=[]
+
     for i,j,k in displayed_posts_dict:
-        if i['anonymous']:
-            j['user_id']=None
-            j['displayed_name']=None
-            j['username']=None
-        k.pop('user_id')
-        k.pop('post_id')
-        displayed_posts.append(DisplayPost(
-            **i,
-            **j,
-            **k
-        ))
-    print(f"length of post{len(posts)}, length of users{len(user_info)}, length of urls{len(urls)}, length of displayed_posts{len(displayed_posts)}")
+        concluded_keywords=[keyword 
+                            for keyword in key_words 
+                            if (keyword in str(i))]
+        
+        if concluded_keywords:
+            if i['anonymous']:
+                j['user_id']=None
+                j['displayed_name']=None
+                j['username']=None
+            k.pop('user_id')
+            k.pop('post_id')
+            displayed_posts.append(DisplayPost(
+                **i,
+                **j,
+                **k
+            ))
+        
     return displayed_posts

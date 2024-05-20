@@ -113,8 +113,7 @@ async def search_posts(
             searchRange=cat,
         )
 
-    display_posts=get_display_posts_by_urls(urls)
-
+    display_posts=get_display_posts_by_urls(urls,key_words=key_word_ids)
     response=JSONResponse(content={
         "Session":session_token,
         "Query":query_token
@@ -127,7 +126,7 @@ async def search_posts(
         httponly=True,
         samesite="Strict",
     )
-    
+
     from sql.crud import get_userresponsecache
     return {
         "Response":response,

@@ -35,6 +35,7 @@ class searcher():
         return self.normalizescores(scores)
     
     def query(self,wordids,searchRange=all):
+        
         score=self.nnscore(wordids,searchRange)
         urls=crud.get_urls(net.db,url_ids=score.keys())
         return urls
