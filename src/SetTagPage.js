@@ -71,8 +71,8 @@ const SetTagPage = () => {
 
   return (
     <div>
+    <Container maxWidth="md">
     <Header />
-    <Container maxWidth="xs">
       <Box
         sx={{
           marginTop: 8,

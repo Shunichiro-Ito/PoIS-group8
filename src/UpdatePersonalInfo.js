@@ -105,8 +105,8 @@ const UpdatePersonalInfo = () => {
 
   return (
     <div>
-      <Header />
-    <Container maxWidth="xs">
+    <Container maxWidth="md">
+    <Header />
       <Box
         sx={{
           marginTop: 8,

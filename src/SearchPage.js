@@ -71,8 +71,8 @@ const SearchPage = () => {
 
   return (
    <>
-   <Header />
-    <Container>
+    <Container maxWidth="md">
+    <Header />
       <Box sx={{ textAlign: 'center', margin: '20px 0' }}>
         <TextField 
           variant="outlined" 

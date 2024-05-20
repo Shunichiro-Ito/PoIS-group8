@@ -53,6 +53,7 @@ export const Home = () => {
 
   return (
   <div>
+    <Container maxWidth="md">
     <Header />
     <Box>
     <PopularTags  />  
@@ -168,6 +169,7 @@ export const Home = () => {
 {/* ここまで投稿表示エリア */}
     </Box>
     </Box>
+    </Container>
   </div>
   
   );
