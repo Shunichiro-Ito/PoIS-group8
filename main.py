@@ -11,9 +11,12 @@ from urllib.parse import unquote
 from fastapi import (
     Depends,
     FastAPI,
+    Response,
+    Cookie,
+    Header,
 )
 
-from typing import Annotated,Literal
+from typing import Annotated,Literal,Union
 from models.users import User,Session
 from sql.database import SQLSession
 
@@ -75,11 +78,6 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(posts.router)
 
-
-@app.get('/login')
-async def login_page():
-    return {"message":"login page"}
-
 @app.post('/neural_network/nnscore',tags=["Search"])
 async def train_neural_network(admin:User=Annotated[User,Depends(verify_admin)]):
     Search=searcher()
@@ -119,8 +117,14 @@ async def search_posts(
         httponly=True,
         samesite="Strict",
     )
-
-    return response,urls
+    
+    return {
+        "Response":response,
+        "Urls":urls,
+        "session_id":session_token,
+        "query":query_token,
+        "NN Score":Search.nnscore(wordids=key_word_ids,searchRange=cat)
+    }
 
 #import uvicorn
 #if __name__ == "__main__":

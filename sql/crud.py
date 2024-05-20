@@ -75,7 +75,7 @@ def get_users(
         all: bool = False
 ):
     if isinstance(user_id,int):
-        user_list=[fakedb.fake_users_db[i] for i in fakedb.fake_users_db if i['user_id']==user_id]
+        user_list=[fakedb.fake_users_db[i] for i in fakedb.fake_users_db if fakedb.fake_users_db[i]['user_id']==user_id]
         if user_list:
             return user_list[0]
         else:
@@ -159,7 +159,7 @@ def get_posts(
         user_id=get_users(db,username=username)['user_id']
         return [fakedb.fake_posts_db[i] 
                 for i in fakedb.fake_posts_db 
-                if i['post_id'] in post_ids and (
+                if fakedb.fake_posts_db[i]['post_id'] in post_ids and (
                     fakedb.fake_posts_db[i]['anonymous']==False or 
                     fakedb.fake_post_user_db[i]['user_id']==user_id
                 )
@@ -396,11 +396,35 @@ def get_hiddenurl(
             models.hiddenurl.fromid == fromid
             ).all()
     
+@overload
 def get_userresponsecache(db: Session):
-    out=[nodes.userResponseCacheOut(**fakedb_search.fake_user_response_cache_db[i]) 
-         for i in fakedb_search.fake_user_response_cache_db]
-    return out
-    return db.query(models.userResponseCache).all()
+    ...
+
+@overload
+def get_userresponsecache(db: Session, session: str):
+    ...
+
+def get_userresponsecache(db: Session, session: Optional[str] = None):
+    if session:
+        out=[
+            nodes.userResponseCacheOut(**fakedb_search.fake_user_response_cache_db[i])
+            for i in fakedb_search.fake_user_response_cache_db
+            if fakedb_search.fake_user_response_cache_db[i]['sessionvalue']==session
+            and fakedb_search.fake_user_response_cache_db[i]['action']=="search"
+        ]
+        if out:
+            return out[0]
+        else:
+            return None
+        return db.query(models.userResponseCache).filter(
+            models.userResponseCache.session == session,
+            models.userResponseCache.action == "search"
+        ).first()
+    else:
+        out=[nodes.userResponseCacheOut(**fakedb_search.fake_user_response_cache_db[i]) 
+            for i in fakedb_search.fake_user_response_cache_db]
+        return out
+        return db.query(models.userResponseCache).all()
 
 @overload
 def get_urls(db: Session, url_ids: List[int]):
@@ -414,10 +438,15 @@ def get_urls(db: Session):
 def get_urls(db: Session, type: str):
     ...
 
+@overload
+def get_urls(db: Session, url:str):
+    ...
+
 def get_urls(
         db: Session,
         url_ids: Optional[List[int]] = None,
-        type: Optional[str] = None
+        type: Optional[str] = None,
+        url: Optional[str] = None
 ):
     if url_ids:
         return [fakedb_search.fake_url_db[i] 
@@ -431,6 +460,12 @@ def get_urls(
                 if fakedb_search.fake_url_db[i]['type']==type
         ]
         return db.query(models.url).filter(models.url.type == type).all()
+    elif url:
+        return [fakedb_search.fake_url_db[i] 
+                for i in fakedb_search.fake_url_db 
+                if fakedb_search.fake_url_db[i]['url']==url
+        ]
+        return db.query(models.url).filter(models.url.url == url).first()
     else:
         return [fakedb_search.fake_url_db[i] for i in fakedb_search.fake_url_db]
         return db.query(models.url).all()
@@ -717,12 +752,20 @@ def update_user(
         }
     elif isinstance(user,users.UserInDBtag):
         current_tag=get_tags(db,user.user_id)
+        print(current_tag)
         for tag in current_tag:
             fakedb.fake_interest_tag_db.pop(tag)
         for tag in user.interested_tag:
-            create_interest_tag(db,models.interest_tag(user_id=user.user_id,tag_id=tag))
+            out=fakedb.fake_interest_tag_db.update({
+                len(fakedb.fake_interest_tag_db)+1:{
+                    "user_id":user.user_id,
+                    "tag_id":tag
+                }
+            })
+        assert current_tag!=get_tags(db,user.user_id)
         return {
-            "user":get_users(db,user.user_id),
+            "user":get_users(db,user_id=user.user_id),
+            "tags":out
         }
         db.execute(f"DELETE FROM interest_tag WHERE user_id={user.user_id}")
         for tag in user.interested_tag:
@@ -742,6 +785,9 @@ def update_user(
         return {
             "user":userDB,
         }
+    else:
+        return "no update made"
+
 
 @overload
 def update_post(

@@ -5,6 +5,7 @@ from sql.schemas import users,posts,nodes
 #from sql.database import SessionLocal
 
 from sql import crud
+from search import nn
 
 from fastapi import Depends,HTTPException, status,Header,Cookie
 from fastapi_pagination import Page, paginate
@@ -13,9 +14,9 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fakedb import fake_users_db
 
-from fastapi.security import APIKeyQuery
+from fastapi.security import APIKeyQuery, APIKeyCookie
 
-cookie_scheme = APIKeyQuery(name="Session")
+cookie_scheme = APIKeyCookie(name="Session",auto_error=False)
 
 from models.users import (
     UserInDB1,UserInDB,TokenData,UserIn,UserOut,UserInpi,UserInDBtag,
@@ -110,7 +111,7 @@ async def get_current_user(token: Annotated[Token, Depends(oauth2_scheme)]):
             detail="Token has expired",
             headers={"WWW-Authenticate": "Bearer"},
         )
-        user = get_user(fake_users_db, username=token_data.username)
+        user = get_user(db, username=token_data.username)
         if user is None:
             raise credentials_exception
         return user
@@ -210,13 +211,14 @@ def update_tags(db,
                 ):
     old_interest_tags=crud.get_tags(db,username=user.username)
 
-    userTag=UserInDBtag(
+    userTag=users.UserInDBtag(
+                        user_id=user.user_id,
                         username=user.username,
                         interested_tag=new_tag,
                         displayed_name=user.displayed_name,
                         )
-    userDB=crud.update_user(db,userTag)
-    return userDB
+    output=crud.update_user(db,user=userTag)
+    return output
 
 def read_user(db,
               username,
@@ -249,14 +251,12 @@ def read_user(db,
 def get_a_post(db,
                post_id: int,
                user:Optional[UserInDB]=None,
-               session: Optional[Session]=None,
                
 ):
-    
     if not user:
         posts=crud.get_posts(db,post_ids=[post_id],anonymousIncluded=False)
     else:
-        posts=crud.get_posts(db,post_ids=[post_id],user_id=user.user_id)
+        posts=crud.get_posts(db,post_ids=[post_id],username=user.username)
     if len(posts)==0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -366,30 +366,43 @@ def create_session_token(db,
     sessionvalue=f'{uuid4().hex}-{str(int(time()))}'
     querys=f'{username}={query}'
 
-    newSession=Session(
-        Session=sessionvalue,
-        Query=querys,
-    )
-
     updatesession(
         db=db,
-        session=newSession,
+        session=sessionvalue,
+        key_words=query,
         action="search"
     )
 
     return sessionvalue,querys
 
 def updatesession(db,
-                  session: Session,
+                  session: str,
                   action: Literal["search","click","good","early","impossible"]="search",
+                  selectedurl: Optional[str]=None,
                   key_words: str=""):
-    
+
+    search_info=crud.get_userresponsecache(db,session=session)
+    urlid=crud.get_urls(db,url=selectedurl)
+    if search_info:
+        print(f"search_info: {search_info}")
+        key_words=search_info.querys
+        from ai import mecab
+        mecabTokenizer=mecab.MecabTokenizer()
+        wordids=mecabTokenizer.tokenize(key_words)
+        nn.searchnet().trainquery(
+            wordids=wordids,
+            urlids=crud.get_urls(db),
+            selectedurl=urlid,
+            action=action
+        )
+    else:
+        print(f"no search_info")
     return crud.create_userresponsecache(
             db,
             userresponsecache=nodes.userResponseCacheIn(
-                sessionvalue=session.Session,
-                querys=session.Query,
+                sessionvalue=session,
+                querys=key_words,
                 selectedurl=None,
-                action=action
+                actions=action
             )
         )

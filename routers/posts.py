@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends,HTTPException,status,Header,Response,Request,Form
+from fastapi import APIRouter, Depends,HTTPException,status,Header,Cookie,Request,Form,Security
 from fastapi.responses import RedirectResponse
 from typing import Literal, Annotated,Union
 from search.searchengine import searcher
@@ -61,11 +61,11 @@ async def submit_post(
 async def feedback(current_user: Annotated[User,Depends(get_current_user)],
                    post_id:int,
                    feedback: Feedback=Form(...),
-                   session:Session=Depends(cookie_scheme),
+                   session:Union[str, None] = Cookie(None),
 ):
     if current_user:
         str_feedback=feedback.value
-        updatesession(db,session,action=feedback)
+        updatesession(db,session=session,action=feedback)
         return updateFeedback(current_user,post_id,str_feedback,db=db)
     else:
         raise HTTPException(
@@ -74,20 +74,29 @@ async def feedback(current_user: Annotated[User,Depends(get_current_user)],
             headers={"WWW-Authenticate": "Bearer"},
             )
     
-@router.put("/post_id/{post_id}")
+@router.post("/post_id/{post_id}")
 async def read_a_post(
     token: Annotated[Token, Depends(oauth2_scheme)],
-    session: Annotated[Session,Depends(cookie_scheme)],
     post_id:  int,
-):
+    session: Union[str, None] = None,
+    
+): 
+    print(session)
     if token:
         current_user = await get_current_user(token)
-        
+        if session:
+            out=updatesession(
+                db,session=session,action="click",selectedurl=f"/post_id/{post_id}"
+            )
+            print(f'update session: {out}')
+        return get_a_post(db,
+                          post_id=post_id,
+                          user=current_user,
+                          )[0]
     else:
-        current_user=None
-    return get_a_post(db,
-                        current_user,
-                        post_id)[0]
+        return get_a_post(db,
+                          post_id=post_id)[0]
+
 
 # not ready
 # https://uriyyo-fastapi-pagination.netlify.app/tutorials/cursor-pagination/
