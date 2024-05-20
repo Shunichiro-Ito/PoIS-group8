@@ -56,3 +56,4 @@ class DisplayPost(BaseModel):
     age: int
     certified: bool
     url: str
+    score: Optional[float]=None

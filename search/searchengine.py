@@ -10,6 +10,9 @@ class searchRange(Enum):
 
 class searcher():
 
+    def des_order(self,scores):
+        return dict(sorted(scores.items(), key=lambda item: item[1], reverse=True))
+
     def normalizescores(self,scores,smallIsBetter=0):
         vsmall=0.00001
         if smallIsBetter:
@@ -32,10 +35,11 @@ class searcher():
         urlids=[i['url_id'] for i in rows]
         nnres=net.getresult(wordids,urlids)
         scores=dict([urlids[i],nnres[i]] for i in range(len(urlids)))
+
         return self.normalizescores(scores)
     
     def query(self,wordids,searchRange=all):
         
         score=self.nnscore(wordids,searchRange)
         urls=crud.get_urls(net.db,url_ids=score.keys())
-        return urls
+        return urls,score

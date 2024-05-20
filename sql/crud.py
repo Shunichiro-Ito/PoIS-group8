@@ -543,6 +543,7 @@ def create_post(
     post.post_id=len(fakedb.fake_posts_db)+1
     fakedb.fake_posts_db.update({post.post_id:post.model_dump()})
     postout=fakedb.fake_posts_db[post.post_id]
+    fakedb.fake_post_user_db.update({post.post_id:{"user_id":post.user_id,"post_id":post.post_id}})
 
     return {
         "post":postout,

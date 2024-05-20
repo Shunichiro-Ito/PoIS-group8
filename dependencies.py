@@ -433,7 +433,7 @@ def updatesession(db,
         else:
             print(f"no search_info")
 
-def get_display_posts_by_urls(urls,key_words:Optional[list[str]]=[]):
+def get_display_posts_by_urls(urls,key_words:Optional[list[str]]=[],score:Optional[dict]={}):
     
     posts=crud.get_posts(db,post_ids=[i['post_id'] for i in urls
                                       if i['category']=='post'])
@@ -458,7 +458,7 @@ def get_display_posts_by_urls(urls,key_words:Optional[list[str]]=[]):
             displayed_posts.append(DisplayPost(
                 **i,
                 **j,
-                **k
+                **k,
             ))
-        
+
     return displayed_posts

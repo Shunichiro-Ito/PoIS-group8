@@ -108,12 +108,12 @@ async def search_posts(
     key_word_ids=MecabTokenizer().tokenize(key_words)
 
     Search=searcher()
-    urls=Search.query(
+    urls,score=Search.query(
             wordids=key_word_ids,
             searchRange=cat,
         )
 
-    display_posts=get_display_posts_by_urls(urls,key_words=key_word_ids)
+    display_posts=get_display_posts_by_urls(urls,key_words=key_word_ids,score=score)
     response=JSONResponse(content={
         "Session":session_token,
         "Query":query_token
