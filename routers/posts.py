@@ -49,7 +49,8 @@ async def submit_post(
 ):
     
     if current_user:
-        post_id=upload_post_db(current_user,new_post,db=db)
+        res=upload_post_db(current_user,new_post,db=db)
+        post_id=res['post']['post_id']
         return RedirectResponse(f"/posts/{post_id}",status_code=status.HTTP_303_SEE_OTHER)
     else:
         raise HTTPException(
@@ -88,14 +89,12 @@ async def read_a_post(
             out=updatesession(
                 db,session=session,action="click",selectedurl=f"/posts/post_id/{post_id}"
             )
-            print(f'update session: {out}')
         return get_a_post(db,
                           post_id=post_id,
                           user=current_user,
                           )[0]
-    else:
-        return get_a_post(db,
-                          post_id=post_id)[0]
+
+    return get_a_post(db,post_id=post_id)[0]
 
 
 # not ready

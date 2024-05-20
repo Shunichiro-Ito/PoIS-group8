@@ -2,15 +2,13 @@ from pydantic import BaseModel, Field
 from typing import Optional, Union
 from datetime import date,datetime
 from enum import Enum
+from sql.schemas.users import Gender
 
 class Feedback(Enum):
     good="good"
     early="early"
     impossible="impossible"
 
-class Gender(Enum):
-    f="f"
-    m="m"
 
 class Post(BaseModel):
     post_id: int

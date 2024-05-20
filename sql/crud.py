@@ -426,7 +426,7 @@ def get_userresponsecache(db: Session, session: Optional[str] = None):
             for i in fakedb_search.fake_user_response_cache_db
             if fakedb_search.fake_user_response_cache_db[i]['sessionvalue']==session
         ]
-        
+
         if out:
             return out[0]
         else:
@@ -541,12 +541,14 @@ def create_post(
     post.post_id=len(fakedb.fake_posts_db)+1
     fakedb.fake_posts_db.update({post.post_id:post.model_dump()})
     postout=fakedb.fake_posts_db[post.post_id]
+
     return {
         "post":postout,
-        "tfidf":create_tfidf(db,tfidf,post.post_id),
-        "writers_dynamic":create_writers_dynamic(db,writers_dynamic,post.post_id),
-        "url":create_url(db,url="/".join(["post",post.post_id]),id=post.post_id,type='post')
+        "tfidf":create_tfidf(db,tfidf=tfidf,post_id=post.post_id),
+        "writers_dynamic":create_writers_dynamic(db,writers_dynamic,post_id=post.post_id),
+        "url":create_url(db,url="/".join(["post",str(post.post_id)]),id=post.post_id,type='post')
     }
+
     db_post=models.Post(**post.model_dump())
     db.add(db_post)
     db.commit()
@@ -576,9 +578,10 @@ def create_writers_initial(db: Session, writers_initial: posts.Post_v_Writers_in
     db.refresh(db_writers_initial)
     return db_writers_initial
 
-def create_writers_dynamic(db: Session, writers_dynamic: posts.Post_v_Writers_dinamicdata,):
-    fakedb.fake_post_writer_dynamic_db.update({writers_dynamic.post_id:writers_dynamic.model_dump()})
-    return fakedb.fake_post_writer_dynamic_db[writers_dynamic.post_id]
+def create_writers_dynamic(db: Session, writers_dynamic: posts.Post_v_Writers_dinamicdatanoId,post_id: int):
+    withId=posts.Post_v_Writers_dinamicdata(**writers_dynamic.model_dump(),post_id=post_id)
+    fakedb.fake_post_writer_dynamic_db.update({withId.post_id:withId.model_dump()})
+    return fakedb.fake_post_writer_dynamic_db[withId.post_id]
     db_writers_dynamic=models.Post_v_Writers_dinamicdata(**writers_dynamic.model_dump())
     db.add(db_writers_dynamic)
     db.commit()
@@ -596,22 +599,23 @@ def create_readers(db: Session, readers: posts.Post_v_Readers):
 
 def create_url(
         db: Session, 
-        url: Union[posts.url,users.url], 
+        url: str, 
         id: int, 
         type: str
 ):
+    url_id=len(fakedb_search.fake_url_db)+1
     fakedb_search.fake_url_db.update(
         {
-            url.id:{
-                "url_id":len(fakedb_search.fake_url_db)+1,
-                "url":url.url,
+            url_id:{
+                "url_id":url_id,
+                "url":url,
                 "category":id,
                 "user_id":id if type=='user' else None,
                 "post_id":id if type=='post' else None
             }
         }
     )
-    return fakedb_search.fake_url_db[url.id]
+    return fakedb_search.fake_url_db[url_id]
 
     db_url=models.url(**url.model_dump())
     db.add(db_url)
