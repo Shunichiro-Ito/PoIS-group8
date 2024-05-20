@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone,date
-from typing import Annotated, Union,Literal
+from typing import Annotated, Optional, Union,Literal
 from sql import crud
 from sql.schemas import users,posts,nodes
 #from sql.database import SessionLocal
@@ -13,9 +13,13 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fakedb import fake_users_db
 
+from fastapi.security import APIKeyQuery
+
+cookie_scheme = APIKeyQuery(name="Session")
+
 from models.users import (
     UserInDB1,UserInDB,TokenData,UserIn,UserOut,UserInpi,UserInDBtag,
-    UserInDBpw,Token
+    UserInDBpw,Token,Session
     )
 from models.posts import PostIn,PostInDB,PostOut
 from fastapi.security import APIKeyCookie, APIKeyQuery
@@ -29,8 +33,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/token",auto_error=False,)
-session_scheme = APIKeyCookie(name="session",description="id of user's query",auto_error=False,)
-query_scheme = APIKeyQuery(name="searchresponse",description="user query",auto_error=False,)
+session_scheme = APIKeyCookie(name="session",description="User's query",auto_error=False,)
 from sql.database import SQLSession
 db=SQLSession()
 
@@ -244,8 +247,11 @@ def read_user(db,
         raise NotExistException
 
 def get_a_post(db,
-               user:UserInDB,
-               post_id: int):
+               post_id: int,
+               user:Optional[UserInDB]=None,
+               session: Optional[Session]=None,
+               
+):
     
     if not user:
         posts=crud.get_posts(db,post_ids=[post_id],anonymousIncluded=False)
@@ -360,25 +366,29 @@ def create_session_token(db,
     sessionvalue=f'{uuid4().hex}-{str(int(time()))}'
     querys=f'{username}={query}'
 
+    newSession=Session(
+        Session=sessionvalue,
+        Query=querys,
+    )
+
     updatesession(
         db=db,
-        session=sessionvalue,
-        api_key=querys,
+        session=newSession,
         action="search"
     )
 
     return sessionvalue,querys
 
 def updatesession(db,
-                  session: str,
-                  api_key: str,
+                  session: Session,
                   action: Literal["search","click","good","early","impossible"]="search",
                   key_words: str=""):
+    
     return crud.create_userresponsecache(
             db,
             userresponsecache=nodes.userResponseCacheIn(
-                sessionvalue=session,
-                querys=api_key,
+                sessionvalue=session.Session,
+                querys=session.Query,
                 selectedurl=None,
                 action=action
             )

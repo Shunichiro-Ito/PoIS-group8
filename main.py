@@ -13,11 +13,6 @@ from fastapi import (
     FastAPI,
 )
 
-from fastapi.security import APIKeyQuery
-
-query_scheme = APIKeyQuery(name="Query")
-cookie_scheme = APIKeyQuery(name="Session")
-
 from typing import Annotated,Literal
 from models.users import User,Session
 from sql.database import SQLSession
@@ -105,7 +100,7 @@ async def search_posts(
 
     from ai.mecab import MecabTokenizer
     key_word_ids=MecabTokenizer().tokenize(key_words)
-    print(type(key_word_ids))
+
     Search=searcher()
     urls=Search.query(
             wordids=key_word_ids,
@@ -114,19 +109,18 @@ async def search_posts(
 
     response=JSONResponse(content={
         "Session":session_token,
-        "Query":query_token,
-        "urls":urls,
+        "Query":query_token
     })
 
     response.set_cookie(
         key="Session",
         value=session_token,
-        max_age=1800,  # Cookie expires in 1 hour
+        max_age=1800,  # Cookie expires in 30 minutes
         httponly=True,
         samesite="Strict",
     )
 
-    return response
+    return response,urls
 
 #import uvicorn
 #if __name__ == "__main__":

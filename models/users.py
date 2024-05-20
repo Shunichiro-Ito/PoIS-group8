@@ -66,5 +66,5 @@ class Admin(BaseModel):
     username: str
 
 class Session(BaseModel):
-    session_token: Any
-    query_token: Any
+    Session: Union[str,None]
+    Query: Union[str,None]
