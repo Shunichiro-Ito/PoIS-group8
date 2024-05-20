@@ -40,3 +40,19 @@ class PostInDB(Post):
     early: int=0
     username: str
     impossible: int=0
+
+class DisplayPost(BaseModel):
+    post_id: int
+    user_id: Optional[int]=None
+    username: Optional[str]=None
+    displayed_username: Optional[str]=None
+    title: str
+    content: str
+    post_date: datetime
+    tag_id: list
+    anonymous: bool
+    good: int
+    early: int
+    age: int
+    certified: bool
+    url: str

@@ -112,16 +112,16 @@ fake_url_db={
     ),
     2:dict(
         url_id="url2",
-        url="/users/2",
-        category="user",
-        user_id=2,
-        post_id=None
+        url="/posts/post_id/3",
+        category="post",
+        user_id=None,
+        post_id=2
     ),
     3:dict(
         url_id="url3",
         url="/posts/post_id/2",
         category="post",
         user_id=None,
-        post_id=2
+        post_id=3
     ),
 }

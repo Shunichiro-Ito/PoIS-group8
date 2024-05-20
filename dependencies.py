@@ -22,7 +22,7 @@ from models.users import (
     UserInDB1,UserInDB,TokenData,UserIn,UserOut,UserInpi,UserInDBtag,
     UserInDBpw,Token,Session
     )
-from models.posts import PostIn,PostInDB,PostOut
+from models.posts import PostIn,PostInDB,PostOut,DisplayPost
 from fastapi.security import APIKeyCookie, APIKeyQuery
 
 # to get a string like this run:
@@ -422,3 +422,27 @@ def updatesession(db,
                 )
         else:
             print(f"no search_info")
+
+def get_display_posts_by_urls(urls):
+    
+    posts=crud.get_posts(db,post_ids=[i['post_id'] for i in urls
+                                      if i['category']=='post'])
+    
+    user_info=crud.get_users(db,post_ids=[i['post_id'] for i in urls])
+
+    displayed_posts_dict=zip(posts,user_info,urls)
+    displayed_posts=[]
+    for i,j,k in displayed_posts_dict:
+        if i['anonymous']:
+            j['user_id']=None
+            j['displayed_name']=None
+            j['username']=None
+        k.pop('user_id')
+        k.pop('post_id')
+        displayed_posts.append(DisplayPost(
+            **i,
+            **j,
+            **k
+        ))
+    print(f"length of post{len(posts)}, length of users{len(user_info)}, length of urls{len(urls)}, length of displayed_posts{len(displayed_posts)}")
+    return displayed_posts

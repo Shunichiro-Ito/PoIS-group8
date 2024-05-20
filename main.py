@@ -20,7 +20,14 @@ from typing import Annotated,Literal,Union
 from models.users import User,Session
 from sql.database import SQLSession
 
-from dependencies import get_current_user,show_tags,verify_admin,oauth2_scheme,create_session_token
+from dependencies import (
+    get_current_user,
+    show_tags,
+    verify_admin,
+    oauth2_scheme,
+    create_session_token,
+    get_display_posts_by_urls
+)
 
 from search.searchengine import searcher
 from fakedb import fake_users_db
@@ -105,6 +112,8 @@ async def search_posts(
             searchRange=cat,
         )
 
+    display_posts=get_display_posts_by_urls(urls)
+
     response=JSONResponse(content={
         "Session":session_token,
         "Query":query_token
@@ -117,10 +126,11 @@ async def search_posts(
         httponly=True,
         samesite="Strict",
     )
+    
     from sql.crud import get_userresponsecache
     return {
         "Response":response,
-        "Urls":urls,
+        "Display Posts":display_posts,
         "session_id":session_token,
         "query":query_token,
         "NN Score":Search.nnscore(wordids=key_word_ids,searchRange=cat),

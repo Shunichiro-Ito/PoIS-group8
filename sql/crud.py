@@ -2,6 +2,7 @@ from typing import List,Union,Optional
 from sqlalchemy.orm import Session
 
 import models
+import models.posts
 from sql.schemas import posts, users,nodes
 from typing import overload
 from fastapi import HTTPException
@@ -65,11 +66,16 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 def get_users(db: Session, all=True):
     ...
 
+@overload
+def get_users(db:Session, post_ids: List[int]):
+    ...
+
 def get_users(
         db: Session, 
         user_id: Optional[int] = None,
         user_ids: Optional[List[int]] = None,
         username: Optional[str] = None,
+        post_ids: Optional[List[int]] = None,
         skip: int = 0,
         limit: int = 100,
         all: bool = False
@@ -82,7 +88,7 @@ def get_users(
             return None
         return db.query(models.User).filter(models.User.user_id == user_id).first()
     elif isinstance(user_ids,list):
-        return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db if i['user_id'] in user_id]
+        return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db if fakedb.fake_users_db[i]['user_id'] in user_ids]
         return db.query(models.User).filter(models.User.user_id.in_(user_ids)).all()
     elif username:
         return fakedb.fake_users_db[username]
@@ -90,6 +96,15 @@ def get_users(
     elif all:
         return fakedb.fake_users_db
         return db.query(models.User).all()
+    elif post_ids:
+        user_ids= [fakedb.fake_post_user_db[i]['user_id'] 
+                for i in fakedb.fake_post_user_db 
+                if fakedb.fake_post_user_db[i]['post_id'] in post_ids]
+        return get_users(db,user_ids=user_ids)
+        return db.query(models.User).filter(
+            models.Users.user_id.in_(
+                models.posts.Post.owner_id
+            )).all()
     else:
         return [fakedb.fake_users_db[i] for i in fakedb.fake_users_db][skip:skip+limit]
         return db.query(models.User).offset(skip).limit(limit).all()

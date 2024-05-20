@@ -81,7 +81,7 @@ class Post_v_Readers(Post_v_ReadersnoId):
 class url(BaseModel):
     url: str
     id: int
-    type: str="user"
+    type: str="post"
 
 class Category(BaseModel):
     category_id: int
