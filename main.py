@@ -117,13 +117,14 @@ async def search_posts(
         httponly=True,
         samesite="Strict",
     )
-    
+    from sql.crud import get_userresponsecache
     return {
         "Response":response,
         "Urls":urls,
         "session_id":session_token,
         "query":query_token,
-        "NN Score":Search.nnscore(wordids=key_word_ids,searchRange=cat)
+        "NN Score":Search.nnscore(wordids=key_word_ids,searchRange=cat),
+        "UserResponseCache":get_userresponsecache(db=db)
     }
 
 #import uvicorn

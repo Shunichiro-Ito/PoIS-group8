@@ -258,7 +258,7 @@ def get_post_reader(db: Session, user_id: int, post_id: int):
 def get_hiddennode(db: Session, create_key: str,layer: int):
     return [fakedb_search.fake_hiddennode_db[i]['create_key'] for i in fakedb_search.fake_hiddennode_db
             if fakedb_search.fake_hiddennode_db[i]['create_key']==create_key 
-            and fakedb_search.fake_hiddennode_db[i]['layer']==layer][0]
+            and fakedb_search.fake_hiddennode_db[i]['layer']==layer]
     return db.query(models.hiddennode).filter(
         models.hiddennode.create_key == create_key,
         models.hiddennode.layer == layer
@@ -284,7 +284,7 @@ def get_wordhidden(
                 and fakedb_search.fake_wordhidden_db[i]['toid']==toid
         ]
         if finding:
-            return finding[0]
+            return finding
         else:
             return None
         return db.query(models.wordhidden).filter(
@@ -407,10 +407,9 @@ def get_userresponsecache(db: Session, session: str):
 def get_userresponsecache(db: Session, session: Optional[str] = None):
     if session:
         out=[
-            nodes.userResponseCacheOut(**fakedb_search.fake_user_response_cache_db[i])
+            fakedb_search.fake_user_response_cache_db[i]
             for i in fakedb_search.fake_user_response_cache_db
             if fakedb_search.fake_user_response_cache_db[i]['sessionvalue']==session
-            and fakedb_search.fake_user_response_cache_db[i]['action']=="search"
         ]
         if out:
             return out[0]
@@ -461,6 +460,7 @@ def get_urls(
         ]
         return db.query(models.url).filter(models.url.type == type).all()
     elif url:
+        print(f"URL: {url}")
         return [fakedb_search.fake_url_db[i] 
                 for i in fakedb_search.fake_url_db 
                 if fakedb_search.fake_url_db[i]['url']==url
@@ -682,7 +682,7 @@ def create_userresponsecache(
         db: Session, 
         userresponsecache: nodes.userResponseCacheIn
 ):
-    id=len(fakedb_search.fake_user_response_cache_db)
+    id=len(fakedb_search.fake_user_response_cache_db)+1
     out=nodes.userResponseCacheOut(**userresponsecache.model_dump(),
                                    id=id)
     fakedb_search.fake_user_response_cache_db.update({id:out.model_dump()})
@@ -912,7 +912,10 @@ def update_wordhidden(
     wordhiddenDB=get_wordhidden(db,wordhidden.fromid,wordhidden.toid)
     if wordhiddenDB==None:
         wordhiddenDB=create_wordhidden(db,wordhidden)
-    wordhiddenDB.strength=wordhidden.strength
+    else:
+        wordhiddenDB=wordhiddenDB[0]
+    wordhiddenDB['strength']=wordhidden.strength
+    #wordhiddenDB.strength=wordhidden.strength
     #db.commit()
     return {
         "wordhidden":wordhiddenDB,
@@ -922,8 +925,9 @@ def update_hiddenhidden(
         db: Session, 
         hiddenhidden: nodes.hiddenhidden
 ):
-    hiddenhiddenDB=get_hiddenhidden(db,hiddenhidden.fromid,hiddenhidden.toid)
-    hiddenhiddenDB.strength=hiddenhidden.strength
+    hiddenhiddenDB=get_hiddenhidden(db,hiddenhidden.fromid,hiddenhidden.toid)[0]
+    hiddenhiddenDB['strength']=hiddenhidden.strength
+    #hiddenhiddenDB.strength=hiddenhidden.strength
     #db.commit()
     return {
         "hiddenhidden":hiddenhiddenDB,
@@ -933,8 +937,9 @@ def update_hiddenurl(
         db: Session, 
         hiddenurl: nodes.hiddenurl
 ):
-    hiddenurlDB=get_hiddenurl(db,hiddenurl.fromid,hiddenurl.toid)
-    hiddenurlDB.strength=hiddenurl.strength
+    hiddenurlDB=get_hiddenurl(db,hiddenurl.fromid,hiddenurl.toid)[0]
+    hiddenurlDB['strength']=hiddenurl.strength
+    #hiddenurlDB.strength=hiddenurl.strength
     #db.commit()
     return {
         "hiddenurl":hiddenurlDB,

@@ -380,29 +380,45 @@ def updatesession(db,
                   action: Literal["search","click","good","early","impossible"]="search",
                   selectedurl: Optional[str]=None,
                   key_words: str=""):
-
-    search_info=crud.get_userresponsecache(db,session=session)
-    urlid=crud.get_urls(db,url=selectedurl)
-    if search_info:
-        print(f"search_info: {search_info}")
-        key_words=search_info.querys
-        from ai import mecab
-        mecabTokenizer=mecab.MecabTokenizer()
-        wordids=mecabTokenizer.tokenize(key_words)
-        nn.searchnet().trainquery(
-            wordids=wordids,
-            urlids=crud.get_urls(db),
-            selectedurl=urlid,
-            action=action
-        )
-    else:
-        print(f"no search_info")
-    return crud.create_userresponsecache(
+    if action=="search":
+        return crud.create_userresponsecache(
             db,
             userresponsecache=nodes.userResponseCacheIn(
                 sessionvalue=session,
                 querys=key_words,
                 selectedurl=None,
-                actions=action
+                action=action
             )
         )
+    else:
+        search_info=crud.get_userresponsecache(db,session=session)
+        urlid=crud.get_urls(db,url=selectedurl)
+        print(f"urlid: {urlid}")
+        if urlid:
+            urlid=urlid[0]['url_id']
+        else:
+            return "Error: url not found"
+        urlids=[i['url_id'] for i in crud.get_urls(db)]
+        if search_info:
+            print(f"search_info: {search_info}")
+            key_words=search_info['querys']
+            from ai import mecab
+            mecabTokenizer=mecab.MecabTokenizer()
+            wordids=mecabTokenizer.tokenize(key_words)
+            result=nn.searchnet().trainquery(
+                        wordids=wordids,
+                        urlids=urlids,
+                        selectedurl=urlid,
+                        action=action
+                    )
+            return result,crud.create_userresponsecache(
+                    db,
+                    userresponsecache=nodes.userResponseCacheIn(
+                        sessionvalue=session,
+                        querys=key_words,
+                        selectedurl=selectedurl,
+                        action=action
+                    )
+                )
+        else:
+            print(f"no search_info")

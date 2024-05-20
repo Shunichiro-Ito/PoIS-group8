@@ -16,18 +16,18 @@ class hiddennode(BaseModel):
     layer: int
 
 class wordhidden(BaseModel):
-    fromid: int
-    toid: int
+    fromid: str
+    toid: str
     strength: float
 
 class hiddenhidden(BaseModel):
-    fromid: int
-    toid: int
+    fromid: str
+    toid: str
     strength: float
 
 class hiddenurl(BaseModel):
-    fromid: int
-    toid: int
+    fromid: str
+    toid: str
     strength: float
 
 class userResponseCacheIn(BaseModel):

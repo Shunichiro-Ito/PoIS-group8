@@ -81,12 +81,11 @@ async def read_a_post(
     session: Union[str, None] = None,
     
 ): 
-    print(session)
     if token:
         current_user = await get_current_user(token)
         if session:
             out=updatesession(
-                db,session=session,action="click",selectedurl=f"/post_id/{post_id}"
+                db,session=session,action="click",selectedurl=f"/posts/post_id/{post_id}"
             )
             print(f'update session: {out}')
         return get_a_post(db,

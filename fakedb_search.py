@@ -1,7 +1,7 @@
 fake_hiddennode_db={
     1:dict(create_key="就活",
             layer=0),
-    1:dict(create_key="就活",
+    2:dict(create_key="就活",
             layer=1),
 }
 
@@ -74,7 +74,7 @@ fake_user_response_cache_db={
         id="1",
         sessionvalue="1",
         querys="就活",
-        selectedurl="url1",
+        selectedurl=None,
         action="search"),
     2:dict(
         id="2",
@@ -105,21 +105,21 @@ fake_user_response_cache_db={
 fake_url_db={
     1:dict(
         url_id="url1",
-        url="/post/1",
+        url="/posts/post_id/1",
         category="post",
         user_id=None,
         post_id=1
     ),
     2:dict(
         url_id="url2",
-        url="/user/2",
+        url="/users/2",
         category="user",
         user_id=2,
         post_id=None
     ),
     3:dict(
         url_id="url3",
-        url="/posts/2",
+        url="/posts/post_id/2",
         category="post",
         user_id=None,
         post_id=2

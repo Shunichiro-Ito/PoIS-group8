@@ -222,13 +222,17 @@ class searchnet:
 
     def updatedatabase(self):
         # set them to database
+        print(f"wordids: {self.wordids}, hiddenids1: {self.hiddenids1}",f"hiddenids2: {self.hiddenids2}, urlids: {self.urlids}")
         for i in range(len(self.wordids)):
             for j in range(len(self.hiddenids1)):
+                self.hiddenids1=list(self.hiddenids1)
                 self.setstrength(self.wordids[i], self.hiddenids1[j], 0, self.wi[i][j])
         for j in range(len(self.hiddenids1)):
             for k in range(len(self.hiddenids2)):
+                self.hiddenids2=list(self.hiddenids2)
                 self.setstrength(self.hiddenids1[j], self.hiddenids2[k], 1, self.wh[j][k])
         for j in range(len(self.hiddenids2)):
             for k in range(len(self.urlids)):
                 self.setstrength(self.hiddenids2[j], self.urlids[k], 2, self.wo[j][k])
-        self.con.commit()
+        #self.con.commit()
+        return self.wordids, self.hiddenids1, self.hiddenids2, self.urlids
