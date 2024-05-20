@@ -313,11 +313,12 @@ def upload_post_db(
         **new_post.model_dump(),
         post_id=0,
         username=user.username,
+        user_id=user.user_id,
         post_date=datetime.now(),
     )
     tfidf=posts.Post_v_tfidfnoId(
         zip(
-            ['_'.join(['tfidf',i]) for i in range(0,20)],
+            ['_'.join(['tfidf',str(i)]) for i in range(0,20)],
             [1/19]*20)
         )
     userDetail=get_user(db,user.username)
@@ -400,7 +401,6 @@ def updatesession(db,
             return "Error: url not found"
         urlids=[i['url_id'] for i in crud.get_urls(db)]
         if search_info:
-            print(f"search_info: {search_info}")
             key_words=search_info['querys']
             from ai import mecab
             mecabTokenizer=mecab.MecabTokenizer()

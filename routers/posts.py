@@ -47,6 +47,7 @@ async def submit_post(
     current_user: Annotated[User, Depends(get_current_user)],
     new_post: PostIn,
 ):
+    
     if current_user:
         post_id=upload_post_db(current_user,new_post,db=db)
         return RedirectResponse(f"/posts/{post_id}",status_code=status.HTTP_303_SEE_OTHER)
@@ -65,7 +66,7 @@ async def feedback(current_user: Annotated[User,Depends(get_current_user)],
 ):
     if current_user:
         str_feedback=feedback.value
-        updatesession(db,session=session,action=feedback)
+        updatesession(db,session=session,selectedurl=f"/posts/post_id/{post_id}",action=feedback)
         return updateFeedback(current_user,post_id,str_feedback,db=db)
     else:
         raise HTTPException(

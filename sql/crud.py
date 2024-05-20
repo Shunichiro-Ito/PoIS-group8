@@ -426,6 +426,7 @@ def get_userresponsecache(db: Session, session: Optional[str] = None):
             for i in fakedb_search.fake_user_response_cache_db
             if fakedb_search.fake_user_response_cache_db[i]['sessionvalue']==session
         ]
+        
         if out:
             return out[0]
         else:

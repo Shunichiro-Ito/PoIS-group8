@@ -32,7 +32,7 @@ class PostIn(BaseModel):
     title:str=Field(...,min_length=5,max_length=50)
     content: str
     age: int
-    tag_id: list
+    tag_id: list[int]
     anonymous: bool
 
 class PostInDB(Post):
