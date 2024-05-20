@@ -51,7 +51,7 @@ async def submit_post(
     if current_user:
         res=upload_post_db(current_user,new_post,db=db)
         post_id=res['post']['post_id']
-        return RedirectResponse(f"/posts/{post_id}",status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse(f"/posts/post_id/{post_id}",status_code=status.HTTP_307_TEMPORARY_REDIRECT)
     else:
         raise HTTPException(
             status_code=status.HTTP_303_SEE_OTHER,

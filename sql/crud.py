@@ -172,7 +172,7 @@ def get_posts(
 ):
     if post_ids and username:
         user_id=get_users(db,username=username)['user_id']
-        print(f"User ID: {user_id}")
+        print(f"User ID: {fakedb.fake_post_user_db}")
         
         return [fakedb.fake_posts_db[i] 
                 for i in fakedb.fake_posts_db 

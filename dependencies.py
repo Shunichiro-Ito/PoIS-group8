@@ -265,8 +265,7 @@ def get_a_post(db,
             detail="Post not found",
         )
     else:
-        return {"posts":posts,
-                "all_posts":crud.get_posts(db)}
+        return posts
 
 def verify_token(token: str = Header(None), session_token: str = Cookie(None)):
     if token or session_token:
