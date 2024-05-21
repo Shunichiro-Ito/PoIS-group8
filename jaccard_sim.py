@@ -164,7 +164,6 @@ def main(current_user):
                         row['tag_id']=[row['tag']]
                         out=DisplayPost(**dict(row),
                                         **{"score":merge_dict[row['title']]})
-                        print(out)
                         output_list.append(out)
                         
                 output_list
