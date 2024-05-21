@@ -780,7 +780,6 @@ def update_user(
         }
     elif isinstance(user,users.UserInDBtag):
         current_tag=get_tags(db,user.user_id)
-        print(current_tag)
         for tag in current_tag:
             fakedb.fake_interest_tag_db.pop(tag)
         newTags={}
@@ -791,7 +790,7 @@ def update_user(
                 "tag_id":tag
             }
             fakedb.fake_interest_tag_db.update(newTags)
-        #assert current_tag!=get_tags(db,user.user_id)
+        #assert current_tag==get_tags(db,user.user_id)
         return {
             "user":get_users(db,user_id=user.user_id),
             "tags":newTags
