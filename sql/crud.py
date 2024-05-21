@@ -188,9 +188,10 @@ def get_posts(
             ).all()
     elif post_ids:
         posts=[fakedb.fake_posts_db[i] for i in fakedb.fake_posts_db if fakedb.fake_posts_db[i]['post_id'] in post_ids]
+        
         for i in posts:
-            for j in posts['tag_id']:
-                posts['tag_id'][j]=get_categories(db,category_ids=posts['tag_id'][j])
+            for j in i['tag_id']:
+                j=get_categories(db,category_ids=[j])
         return posts
         return db.query(models.Post).filter(
                 models.Post.post_id.in_(post_ids),models.Post.anonymous==anonymousIncluded
@@ -782,17 +783,18 @@ def update_user(
         print(current_tag)
         for tag in current_tag:
             fakedb.fake_interest_tag_db.pop(tag)
+        newTags={}
         for tag in user.interested_tag:
-            out=fakedb.fake_interest_tag_db.update({
-                len(fakedb.fake_interest_tag_db)+1:{
-                    "user_id":user.user_id,
-                    "tag_id":tag
-                }
-            })
-        assert current_tag!=get_tags(db,user.user_id)
+            newId=max([i for i in fakedb.fake_interest_tag_db])+1
+            newTags[newId]={
+                "user_id":user.user_id,
+                "tag_id":tag
+            }
+            fakedb.fake_interest_tag_db.update(newTags)
+        #assert current_tag!=get_tags(db,user.user_id)
         return {
             "user":get_users(db,user_id=user.user_id),
-            "tags":out
+            "tags":newTags
         }
         db.execute(f"DELETE FROM interest_tag WHERE user_id={user.user_id}")
         for tag in user.interested_tag:
