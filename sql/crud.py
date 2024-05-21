@@ -231,7 +231,10 @@ def get_categories(
         limit: int = 100
 ):
     if category_ids:
-        return [fakedb.fake_category_db[i] for i in fakedb.fake_category_db if i['tag_id'] in category_ids]
+        try:
+            return [fakedb.fake_category_db[i] for i in fakedb.fake_category_db if i['tag_id'] in category_ids]
+        except:
+            return [fakedb.fake_category_db[i] for i in fakedb.fake_category_db if i in category_ids]
         return db.query(models.Category).filter(models.Category.category_id.in_(category_ids)).all()
     else:
         return [fakedb.fake_category_db[i] for i in fakedb.fake_category_db][skip:skip+limit]

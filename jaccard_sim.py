@@ -112,8 +112,8 @@ def main(current_user):
             value['tag_id'] = '仕事'
         interested_tags.append(value['tag_id'])
             
-    popular_tag=crud.get_categories(db=db)
-    #popular_tag = ['就活', '仕事', '恋愛', '引越し', 'お花見、春', 'キャンプ', '大学生活']
+    #popular_tag=crud.get_categories(db=db)
+    popular_tag = ['就活', '仕事', '恋愛', '引越し', 'お花見、春', 'キャンプ', '大学生活']
     i = 0
     if len(interested_tags) < 5:
         res = 5 - len(interested_tags)

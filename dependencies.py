@@ -429,7 +429,7 @@ def updatesession(db,
             print(f"no search_info")
 
 def get_display_posts_by_urls(urls,key_words:Optional[list[str]]=[],score:Optional[dict]={}):
-    
+    print(f"urls:{urls} keywords:{key_words} score:{score}")
     posts=crud.get_posts(db,post_ids=[i['post_id'] for i in urls
                                       if i['category']=='post'])
     
@@ -438,7 +438,11 @@ def get_display_posts_by_urls(urls,key_words:Optional[list[str]]=[],score:Option
     displayed_posts_dict=zip(posts,user_info,urls)
     displayed_posts=[]
 
+
     for i,j,k in displayed_posts_dict:
+        i=i.copy()
+        j=j.copy()
+        k=k.copy()
         concluded_keywords=[keyword 
                             for keyword in key_words 
                             if (keyword in str(i))]
