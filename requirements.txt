@@ -13,3 +13,6 @@ databases
 sshtunnel
 mecab-python3
 unidic-lite
+scikit-learn
+pandas
+numpy

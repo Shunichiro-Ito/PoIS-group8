@@ -8,6 +8,8 @@ from typing import overload
 from fastapi import HTTPException
 import fakedb,fakedb_search
 
+from sql.csv_data import CSVData
+
 @overload
 def get_feedback(db: Session, post_id: int, user_id: int):
     ...
@@ -170,10 +172,20 @@ def get_posts(
         limit: int = 100,
         anonymousIncluded: bool = False
 ):
+    post_file=CSVData('sql/data/post.csv')
     if post_ids and username:
+        post_user_file=CSVData('sql/data/post_user.csv')
         user_id=get_users(db,username=username)['user_id']
-        print(f"User ID: {fakedb.fake_post_user_db}")
-        
+        own_posts_id=[
+            i['post_id'] for i in post_user_file.csv_rows()
+            if i['user_id']==user_id and i['post_id'] in post_ids
+        ]
+        output_posts=[
+            i for i in post_file.csv_rows()
+            if i['post_id'] in post_ids and 
+            (i['post_id'] in own_posts_id or i['anonymous']=='False')
+        ]
+        return output_posts
         return [fakedb.fake_posts_db[i] 
                 for i in fakedb.fake_posts_db 
                 if fakedb.fake_posts_db[i]['post_id'] in post_ids and (
@@ -187,11 +199,25 @@ def get_posts(
                 or_(models.Post.user_id == user_id, models.Post.anonymous==False)
             ).all()
     elif post_ids:
+        return [
+            i for i in post_file.csv_rows() if i['post_id'] in post_ids
+        ]
         return [fakedb.fake_posts_db[i] for i in fakedb.fake_posts_db if fakedb.fake_posts_db[i]['post_id'] in post_ids]
         return db.query(models.Post).filter(
                 models.Post.post_id.in_(post_ids),models.Post.anonymous==anonymousIncluded
             ).all()
     elif user_id:
+        post_user_file=CSVData('sql/data/post_user.csv')
+        allposts_ids=[
+            i['user_id'] for i in post_user_file.csv_rows() if i['user_id']==user_id
+        ]
+        allposts=[
+            i for i in post_file.csv_rows() if i['post_id'] in allposts_ids
+        ]
+        if anonymousIncluded:
+            return allposts
+        else:
+            return [i for i in allposts if i['anonymous']==False]
         allposts= [fakedb.fake_posts_db[fakedb.fake_post_user_db[i]['post_id']] 
                 for i in fakedb.fake_post_user_db 
                 if fakedb.fake_post_user_db[i]['user_id']==user_id]
@@ -206,6 +232,9 @@ def get_posts(
                 models.Post.user_id == user_id,models.Post.anonymous==False
             ).all()
     else:
+        return [
+            i for i in post_file.csv_rows() if i['anonymous']==anonymousIncluded
+        ][skip:skip+limit]
         return [fakedb.fake_posts_db[i] for i in fakedb.fake_posts_db if fakedb.fake_posts_db[i]['anonymous']==anonymousIncluded][skip:skip+limit]
         return db.query(models.Post).offset(skip).limit(limit).filter(
                 models.Post.anonymous==anonymousIncluded
@@ -225,14 +254,19 @@ def get_categories(
         skip: int = 0,
         limit: int = 100
 ):
+    category_file=CSVData('sql/data/category.csv')
     if category_ids:
+        return [i for i in category_file.csv_rows() if i['tag_id'] in category_ids]
         return [fakedb.fake_category_db[i] for i in fakedb.fake_category_db if i['tag_id'] in category_ids]
         return db.query(models.Category).filter(models.Category.category_id.in_(category_ids)).all()
     else:
+        return [i for i in category_file.csv_rows()][skip:skip+limit]
         return [fakedb.fake_category_db[i] for i in fakedb.fake_category_db][skip:skip+limit]
         return db.query(models.Category).offset(skip).limit(limit).all()
 
 def get_tfidf(db: Session, post_id: int):
+    tfidf_file=CSVData('sql/data/post_tfidf.csv')
+    return [i for i in tfidf_file.csv_rows() if i['post_id']==post_id]
     return fakedb.posts_v_tfidf.get(post_id)
     return db.query(models.Post_v_tfiddf).filter(models.Post_v_tfiddf.post_id == post_id).first()
 
@@ -478,7 +512,6 @@ def get_urls(
         ]
         return db.query(models.url).filter(models.url.type == type).all()
     elif url:
-        print(f"URL: {url}")
         return [fakedb_search.fake_url_db[i] 
                 for i in fakedb_search.fake_url_db 
                 if fakedb_search.fake_url_db[i]['url']==url
@@ -775,7 +808,6 @@ def update_user(
         }
     elif isinstance(user,users.UserInDBtag):
         current_tag=get_tags(db,user.user_id)
-        print(current_tag)
         for tag in current_tag:
             fakedb.fake_interest_tag_db.pop(tag)
         for tag in user.interested_tag:

@@ -1,0 +1,2 @@
+user_id,username,displayed_name,certified,hashed_password,birth,gender,occupation,mbti
+0,admin,Admin,TRUE,$2a$12$aCCjSgmDLA2swqpLU3ORtuE71DmWaDoU82C.5H2tMXU65rh561kvK,21/5/1990,Admin,INTP,

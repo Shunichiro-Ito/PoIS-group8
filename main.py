@@ -20,6 +20,8 @@ from typing import Annotated,Literal,Union
 from models.users import User,Session
 from sql.database import SQLSession
 
+import jaccard_sim
+
 from dependencies import (
     get_current_user,
     show_tags,
@@ -62,13 +64,17 @@ async def root(token: Annotated[Token, Depends(oauth2_scheme)]):
                 # AI
                 # key: title, value: cal of similarity
                 # timeline of posts: db_posts_age - user_age
-                # final_recommend_text_list = jaccard_sim.main(current_user)
+                final_recommend_text_list = jaccard_sim.main(current_user)
+                urls=[
+                    
+                ]
+                get_display_posts_by_urls()
                 # for i in range(5):
                     # key, value = list(candidate_text.items())[i]
                 # 当该用户的feedback数量大于10时并且至少有一条评价为good
-                return {"user":current_user,"posts":"timeline of posts",}
+                return {"user":current_user,"posts":final_recommend_text_list,}
     else:
-        return RedirectResponse("/login")
+        return {"message":"please login"}
 
 origins=[
     "http://localhost:3000",

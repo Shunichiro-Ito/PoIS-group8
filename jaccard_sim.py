@@ -5,10 +5,11 @@ from collections import Counter
 import numpy as np
 from datetime import date
 import pandas as pd
+from models.posts import DisplayPost
 
-# from sql_run import crud
+from sql import crud
 import dependencies
-
+from dependencies import db
 def cal_jaccard_sim(set1, set2):
     intersection = set1.intersection(set2)
     union = set1.union(set2)
@@ -16,8 +17,8 @@ def cal_jaccard_sim(set1, set2):
     return jaccard_similarity
 
 def read_original_data():
-    df = pd.read_csv('D:\\final_intergrated_text_for_DB.csv')  
-    # df = pd.read_csv('final_intergrate_text.csv',
+    # df = pd.read_csv('D:\\final_intergrated_text_for_DB.csv')  
+    df = pd.read_csv('final_intergrated_text_for_DB.csv')
     return df
 
 # input: one user clicks homepage
@@ -27,7 +28,7 @@ def read_original_data():
 # show value(sim) in 0-1
 def main(current_user):
     df = read_original_data()
-
+    
     # tag of age: 
     # 0: 15-18; 1: 18-22; 2: 22-25; 3: 25-30; 4: 30-50; 5: 50-59
     # all tags:
@@ -60,7 +61,7 @@ def main(current_user):
     # key, value = next(iter(first_value.items())) # gender, occupation, birth, interested_tag
     
     # user - age area
-    birth_date = current_user['birth']
+    birth_date = current_user.birth
     current_date = date.today()
     age = current_date.year - birth_date.year
     # i 5个取值（年龄段的开头），6个年龄段
@@ -76,16 +77,16 @@ def main(current_user):
         age_range = 5
 
     # user - gender
-    gender = current_user['gender']
+    gender = current_user.gender
     if gender == "男性":
         gender = 'm'
     else:
         gender = 'f'
     
     # user - occupation
-    occupation = current_user['occupation']
+    occupation = current_user.occupation
 
-    # user - 大分类(temporary):  新卒入社， 会社員， 大学生， 専業主婦， 中途入社
+    # user - 大分类(temporary):  新卒入社， 会社員， 大学生， 専業主婦， 中途入社,  両親 
     # if age_list == 1:
     #     general_occupation == "高校生"
     # if age_list == 1:
@@ -96,21 +97,33 @@ def main(current_user):
     #     general_occupation == "会社員/中途入社"
     # if age_list == 5  and gender == 'f':
     #     general_occupation == "専業主婦"
-    general_occupation = current_user['general_occupation']
+    # general_occupation = current_user['general_occupation']
     
     # user - interesd tags
     # db: 收集user感兴趣的tag，若不足5个，则补足热门tag-> interested_tag=list[0~4]
-    interested_tags = dependencies.show_tags(Session(), current_user['user_id'])
-    popular_tag = ['就活', '仕事', '恋愛', '引越し', 'お花見、春', 'キャンプ', '大学生活']
+    interested_tags = []
+    interested_tags_original = dependencies.show_tags(db=db, user = current_user)
+    for i in range(len(interested_tags_original)):
+        key, value = list(interested_tags_original.items())[i]
+        if value['tag_id'] == 4:
+            value['tag_id'] = '就活'
+        if value['tag_id'] == 5:
+            value['tag_id'] = '仕事'
+        interested_tags.append(value['tag_id'])
+            
+    popular_tag=crud.get_categories(db=db)
+    #popular_tag = ['就活', '仕事', '恋愛', '引越し', 'お花見、春', 'キャンプ', '大学生活']
+    i = 0
     if len(interested_tags) < 5:
-        # (modified) based on the db contents
-        i = 0
-        while (i + len(interested_tags)) < 5:
-            if popular_tag[i] not in interested_tags:
-                interested_tags.append(popular_tag[i])
+        res = 5 - len(interested_tags)
+        for j in range(len(popular_tag)):
+            if popular_tag[j] not in interested_tags:
+                interested_tags.append(popular_tag[j])
                 i += 1
+            if i == res:
+                break
         
-    current_user_profile = {0: age_range, 1: gender, 2: general_occupation, 3: occupation}
+    current_user_profile = {0: age_range, 1: gender, 2: occupation}
     set2 = set(current_user_profile.values())
 
     # 计算new user和10个分类的相似度
@@ -127,18 +140,21 @@ def main(current_user):
     for i in interested_tags:
         for j in range(10):
             key, value = list(sorted_sim.items())[j]
+            max_len = 0
+            current_max_text = {}
             for k in range(len(df['title'])):
-                max_len = 0
-                current_max_text = {}
                 # 随机 -> 选文章长度最长
                 if df.loc[k, 'tag'] == i and df.loc[k, 'kmeans'] == key:
                     max_len = max(max_len, len(df.loc[k, 'content']))
                     if len(df.loc[k, 'content']) == max_len:
                         current_max_text = {df.loc[k, 'title']: value}
+                        output=[DisplayPost(**dict(df.loc[k]))]
+
                                            
             if max_len != 0:
                 final_recommend_text_dict.update(current_max_text)
                 break
+
         
 
                 
@@ -146,10 +162,4 @@ def main(current_user):
     # for i in range(5):
     #     key, value = list(candidate_text.items())[i]
     # print(candidate_text)
-
     return final_recommend_text_dict
-    
-
-
-if __name__ == "__main__":
-   main()

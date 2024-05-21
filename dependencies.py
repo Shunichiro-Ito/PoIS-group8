@@ -187,7 +187,6 @@ def update_personal_info(db,
     if username:
         user=get_user(db,username)
         if user:
-            print(new_info)
             person_info=crud.update_user(db,new_info)['user']
             return person_info
         else:
@@ -254,10 +253,8 @@ def get_a_post(db,
                
 ):
     if not user:
-        print(f"post_id: {post_id}")
         posts=crud.get_posts(db,post_ids=[post_id],anonymousIncluded=False)
     else:
-        print(f"username: {user.username}")
         posts=crud.get_posts(db,post_ids=[post_id],username=user.username)
     if len(posts)==0:
         raise HTTPException(
@@ -403,7 +400,6 @@ def updatesession(db,
     else:
         search_info=crud.get_userresponsecache(db,session=session)
         urlid=crud.get_urls(db,url=selectedurl)
-        print(f"urlid: {urlid}")
         if urlid:
             urlid=urlid[0]['url_id']
         else:
