@@ -18,7 +18,7 @@ def cal_jaccard_sim(set1, set2):
 
 def read_original_data():
     # df = pd.read_csv('D:\\final_intergrated_text_for_DB.csv')  
-    df = pd.read_csv('final_intergrated_text_for_DB.csv')
+    df = pd.read_csv('final_intergrated_text_for_DB2.csv')
     return df
 
 # input: one user clicks homepage
@@ -142,17 +142,19 @@ def main(current_user):
             key, value = list(sorted_sim.items())[j]
             max_len = 0
             current_max_text = {}
+            output_list = []
             for k in range(len(df['title'])):
                 # 随机 -> 选文章长度最长
                 if df.loc[k, 'tag'] == i and df.loc[k, 'kmeans'] == key:
                     max_len = max(max_len, len(df.loc[k, 'content']))
                     if len(df.loc[k, 'content']) == max_len:
                         current_max_text = {df.loc[k, 'title']: value}
-                        output=[DisplayPost(**dict(df.loc[k]))]
-
+                        output=DisplayPost(**dict(df.loc[k]),
+                                            **{"score":value})
                                            
             if max_len != 0:
                 final_recommend_text_dict.update(current_max_text)
+                output_list.append(output)
                 break
 
         
@@ -162,4 +164,4 @@ def main(current_user):
     # for i in range(5):
     #     key, value = list(candidate_text.items())[i]
     # print(candidate_text)
-    return final_recommend_text_dict
+    return final_recommend_text_dict,output_list

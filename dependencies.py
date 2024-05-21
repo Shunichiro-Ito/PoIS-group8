@@ -255,7 +255,7 @@ def get_a_post(db,
     if not user:
         posts=crud.get_posts(db,post_ids=[post_id],anonymousIncluded=False)
     else:
-        posts=crud.get_posts(db,post_ids=[post_id],username=user.username)
+        posts=crud.get_posts(db,post_ids=[post_id],username=user.username,anonymousIncluded=False)
     if len(posts)==0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

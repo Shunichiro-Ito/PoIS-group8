@@ -58,7 +58,6 @@ async def root(token: Annotated[Token, Depends(oauth2_scheme)]):
         current_user = await get_current_user(token)
         if current_user:
             if not show_tags(fake_users_db,current_user):
-
                 return RedirectResponse("/users/interest_tags")
             else:
                 # AI
