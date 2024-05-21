@@ -89,6 +89,9 @@ async def read_a_post(
             out=updatesession(
                 db,session=session,action="click",selectedurl=f"/posts/post_id/{post_id}"
             )
+
+        post_detail=get_a_post(db,post_id=post_id,user=current_user)[0]
+        
         return get_a_post(db,
                           post_id=post_id,
                           user=current_user,
