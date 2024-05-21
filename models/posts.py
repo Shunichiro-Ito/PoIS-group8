@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Union
+from typing import Any, Optional, Union
 from datetime import date,datetime
 from enum import Enum
 
@@ -49,7 +49,7 @@ class DisplayPost(BaseModel):
     title: str
     content: str
     post_date: datetime
-    tag_id: list
+    tag_id: list[Any]
     anonymous: bool
     good: int
     early: int

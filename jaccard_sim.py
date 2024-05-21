@@ -3,7 +3,7 @@
 
 from collections import Counter
 import numpy as np
-from datetime import date
+from datetime import date,datetime
 import pandas as pd
 from models.posts import DisplayPost
 
@@ -28,6 +28,7 @@ def read_original_data():
 # show value(sim) in 0-1
 def main(current_user):
     df = read_original_data()
+    df['tag_id'] = df['tag_id'].astype(float)
     
     # tag of age: 
     # 0: 15-18; 1: 18-22; 2: 22-25; 3: 25-30; 4: 30-50; 5: 50-59
@@ -137,24 +138,36 @@ def main(current_user):
     
     # 提取属于相似度最高的kmeans（若为空则顺延至下一个）组且tag符合兴趣的text
     final_recommend_text_dict = {}
+    output_list = []
     for i in interested_tags:
         for j in range(10):
             key, value = list(sorted_sim.items())[j]
             max_len = 0
             current_max_text = {}
-            output_list = []
+            
             for k in range(len(df['title'])):
                 # 随机 -> 选文章长度最长
                 if df.loc[k, 'tag'] == i and df.loc[k, 'kmeans'] == key:
                     max_len = max(max_len, len(df.loc[k, 'content']))
                     if len(df.loc[k, 'content']) == max_len:
                         current_max_text = {df.loc[k, 'title']: value}
-                        output=DisplayPost(**dict(df.loc[k]),
-                                            **{"score":value})
+                        #output=DisplayPost(**dict(df.loc[k]),
+                        #                    **{"score":value})
                                            
             if max_len != 0:
                 final_recommend_text_dict.update(current_max_text)
-                output_list.append(output)
+                merge_dict = final_recommend_text_dict.copy()
+                for index, row in df.iterrows():
+                    if row['title'] in merge_dict.keys():
+                        
+                        row['post_date']=datetime.strptime(row['post_date'],'%d/%m/%Y').date()
+                        row['tag_id']=[row['tag']]
+                        out=DisplayPost(**dict(row),
+                                        **{"score":merge_dict[row['title']]})
+                        print(out)
+                        output_list.append(out)
+                        
+                output_list
                 break
 
         
@@ -164,4 +177,4 @@ def main(current_user):
     # for i in range(5):
     #     key, value = list(candidate_text.items())[i]
     # print(candidate_text)
-    return final_recommend_text_dict,output_list
+    return output_list
