@@ -17,6 +17,10 @@ const UserProfile = () => {
   const access_token = Cookies.get('access_token');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [indexlist, setIndexlist] = useState({});
+  const [taglist, setTaglist] = useState([]);
+  const [TAGS, setTAGS] = useState([]);
+  const [INDEX,setINDEX] = useState([]);
 
   const handlePostClick = (post) => {
     setSelectedPost(post);
@@ -42,6 +46,18 @@ const UserProfile = () => {
         setUser(response2.data); // APIレスポンスをuserステートに設定
         console.log(response2.data);
         userName=response2.data.username
+
+        const response3 = await axios.get('http://127.0.0.1:8000/users/interest_tags', {
+          headers: {
+            'Authorization': `bearer ${access_token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        setTAGS(response3.data.available_tags.map((tag) => tag.tag_name));
+        setINDEX(response3.data.available_tags.map((tag) => tag.tag_id));
+        console.log(TAGS)
+        console.log(INDEX)
+
         const url = `http://127.0.0.1:8000/posts/${userName}?page=${page}&size=${size}`;
         const response = await axios.get(url, {
           headers: {
@@ -53,7 +69,6 @@ const UserProfile = () => {
         // レスポンスの処理
         console.log(response.data.items);
         setPosts(response.data.items)
-
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -62,6 +77,8 @@ const UserProfile = () => {
     
     fetchUserData();
   }, []); // 空の依存配列を渡すことで、コンポーネントがマウントされた時にのみuseEffectが実行される
+
+
 
  return (
    <Container maxWidth="md">
@@ -131,8 +148,12 @@ const UserProfile = () => {
                   {post.title}
                 </Typography>
                 <Box mt={1} mb={2}>
-                  {post.tag_id.map((tag, idx) => (
-                    <Chip key={idx} label={`#${tag}`} sx={{ marginRight: 1, marginBottom: 1 }} />
+                  {post.tag_id.map((tag,index) => (
+                    <Chip
+                      key={index}
+                      label={TAGS && INDEX ? TAGS[INDEX.indexOf(tag)] : `#${tag}`}
+                      sx={{ marginRight: 1, marginBottom: 1 }}
+                      />
                   ))}
                 </Box>
                 <Typography variant="body1" sx={{ maxHeight: 150, overflow: 'auto' }}>

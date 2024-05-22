@@ -6,8 +6,10 @@ import ReactionButton from "./components/ReactionButton";
 import axios from 'axios';
 import { useEffect, useState } from "react";
 import "./reset.css";
-import { Button, Card, CardContent, TextField, Box, Chip,Container,Paper, Typography } from "@mui/material"; 
+import { Button, Card, CardContent, TextField, Box, Chip,Container,Paper, Typography,Grid, useRadioGroup, CardHeader, CardActions, Avatar } from "@mui/material"; 
 import Cookies from 'js-cookie';
+import GppGoodOutlinedIcon from '@mui/icons-material/GppGoodOutlined';
+import PostModal from './components/PostModal';
 
 
 import "./App.css";
@@ -23,6 +25,17 @@ export const Home = () => {
   const [tags, setTags] = useState([]);
   const [age, setAge] = useState("");
   const access_token = Cookies.get('access_token');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
+
+  const handlePostClick = (post) => {
+    setSelectedPost(post);
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+  };
 
   useEffect(() => {
     const fetchTags = async () => {
@@ -42,9 +55,22 @@ export const Home = () => {
       }
     };
     fetchTags();
-    fetch("http://localhost:3300/posts")
-      .then((res) => res.json())
-      .then((json) => setPosts(json));
+
+    const fetchUserData = async () => {
+      try {
+        const response3 = await axios.get('http://127.0.0.1:8000/', {
+          headers: {
+            'Authorization': `bearer ${access_token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        console.log(response3.data)
+        setPosts(response3.data.posts)
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    }
+    fetchUserData();
   }, []);
 
   const removeTag = (indexToRemove) => {
@@ -141,33 +167,66 @@ export const Home = () => {
       </div>
       
       </Container> 
+      {/* ここまで投稿表示エリア */}
+      </ Box>
+    
 {/* ここまで投稿コンテナ */}
 {/* ここから投稿表示エリア */}
       <Container sx={{width:"50%"}}>
- 
-           {posts.map((post) => (
-            <Card className="card" key={post.id} sx={{ marginBottom: 2 , overflow: 'auto' }}>
-              <div class="card-header">
-              <Typography variant="h7">{post.author}</Typography>
-              <Typography variant="h7">{post.Age+"歳"}</Typography>
-              </div>
-              <Box mt={1}>
-                  {post.tags.map((tag, idx) => (
-                    <Chip key={idx} label={`#${tag}`} style={{ marginRight: 4 ,marginBottom:4}} />
-
+        {posts && posts.length > 0 ? (
+          <>
+            {posts.map((post) => (
+              <Card sx={{ maxWidth: 345, marginBottom: 2 }} >
+              <CardHeader
+                avatar={
+                  <Avatar>
+                    {post.author ? post.author.charAt(0).toUpperCase() : ''}
+                  </Avatar>
+                }
+                title={post.author || ''}
+                subheader={
+                  <Box display="flex" alignItems="center">
+                    <span>{`${post.age || ''} 歳`}</span>
+                    {post.certified && (
+                      <Box ml={1} display="flex">
+                        <GppGoodOutlinedIcon />
+                      </Box>
+                    )}
+                  </Box>
+                }
+                onClick={() => handlePostClick(post)}
+                align="left"
+              />
+              <CardContent onClick={() => handlePostClick(post)}>
+                <Typography variant="h6" component="div">
+                  {post.title}
+                </Typography>
+                <Box mt={1} mb={2}>
+                  {post.tag_id.map((tag, idx) => (
+                    <Chip key={idx} label={`#${tag}`} sx={{ marginRight: 1, marginBottom: 1 }} />
                   ))}
-              </Box>
-              <CardContent sx={{ marginTop:"5px",border: '1px solid #000',width:"100%",height:"60%" ,overflow: 'auto'}}>
-                <Typography variant="body2" >{post.content}</Typography>
+                </Box>
+                <Typography variant="body1" sx={{ maxHeight: 150, overflow: 'auto' }}>
+                  {post.content}
+                </Typography>
               </CardContent>
-              <div className="card-footer" >
-                <ReactionButton />
-              </div>
+              <CardActions disableSpacing>
+                <ReactionButton good={post.good} impossible={post.impossible} early={post.early} />
+                <Box ml="auto">
+                  <Typography variant="body2" sx={{ marginLeft: 1 }}>
+                    {post.post_date}
+                  </Typography>
+                </Box>
+              </CardActions>
             </Card>
-          ))}
+            ))}
+            <PostModal open={modalOpen} handleClose={handleModalClose} post={selectedPost} />
+          </>
+        ) : (
+          <Typography variant="body1">推薦結果を所得しています...</Typography>
+        )}
       </Container>
-{/* ここまで投稿表示エリア */}
-    </Box>
+    
     </Box>
     </Container>
   </div>

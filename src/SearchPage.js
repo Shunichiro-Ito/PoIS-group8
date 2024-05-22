@@ -22,9 +22,32 @@ const SearchPage = () => {
     setSearchTerm(event.target.value);
   };
 
-  const handlePostClick = (post) => {
+  const handlePostClick = async(post) => {
     setSelectedPost(post);
     setModalOpen(true);
+    const feedback = Cookies.get('session_id');
+    const url = `http://127.0.0.1:8000/posts/post_id/${post.post_id}?session=${feedback}`;
+
+    try {
+      const response = await axios.post(
+        url,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${access_token}`,
+            'Content-Type': 'application/json',
+            'accept': 'application/json'
+          }
+        }
+      );
+
+      // レスポンスの処理
+      console.log(response.data);
+      console.log("Yes")
+    } catch (error) {
+      console.log("No")
+      setError('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
+    }
   };
 
   const handleModalClose = () => {
